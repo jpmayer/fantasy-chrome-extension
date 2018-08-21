@@ -7,9 +7,35 @@ let url = ""
 let lastSync = null;
 let firstYear = null;
 let leagueId = null;
+let QBG = null;
+let QBS= null;
+let RBG = null;
+let RBS = null;
+let WRG = null;
+let WRS = null;
+let TEG = null;
+let TES = null;
+let DSTG = null;
+let DSTS = null;
+let KG = null;
+let KS = null;
 
-chrome.storage.sync.get('lastSync', function(data) {
+chrome.storage.sync.get(['lastSync', 'QBG', 'QBS', 'RBG', 'RBS', 'WRG', 'WRS', 'TEG', 'TES', 'DSTG', 'DSTS', 'KG', 'KS'], function(data) {
     lastSync = data.lastSync;
+    //Get old records from extension options
+    QBG = data.QBG;
+    QBS = data.QBS;
+    RBG = data.RBG;
+    RBS = data.RBS;
+    WRG = data.WRG;
+    WRS = data.WRS;
+    TEG = data.TEG;
+    TES = data.TES;
+    DSTG = data.DSTG;
+    DSTS = data.DSTS;
+    KG = data.KG;
+    KS = data.KS;
+    //set last sync display time
     syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
   });
 
@@ -51,7 +77,7 @@ chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
       var db = html5rocks.webdb.db;
       db.transaction(function(tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "history(manager TEXT, week INTEGER, year INTEGER, vs TEXT, player TEXT, playerPosition TEXT, score FLOAT, isHomeGame BOOLEAN)", []);
+                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
       });
       db.transaction(function(tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
@@ -115,6 +141,32 @@ updateDatabase.onclick = function(element) {
 
       week.matchups.forEach(function(matchup, index){
         if(!matchup.isBye && (periodId <= 13 || (periodId > 13 && periodId < 16 && index <= 2) || (periodId === 16 && index < 1)) ) {
+
+          if(currentYear - seasonId <= 1) {
+            // if current year or previous year, calculate player records
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
+            xhr.send();
+            var boxscore = JSON.parse(xhr.responseText).boxscore;
+
+            boxscore.teams.forEach(function(teamMatchup) {
+              const teamName = teamMatchup.team.teamId;
+              teamMatchup.slots.forEach(function(playerStats) {
+                if(playerStats.slotCategoryId !== 20) {
+                  // dont save bench players
+                  if(playerStats.player) {
+                    //only save if player slot filled
+                    let position = playerStats.player.eligibleSlotCategoryIds[0];
+                    db.transaction(function(tx){
+                      tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                          [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName + " " + playerStats.player.lastName), position, playerStats.currentPeriodRealStats.appliedStatTotal]);
+                     });
+                  }
+                }
+              })
+            })
+          }
+
           let homeScore = matchup.homeTeamScores[0];
           let awayScore = matchup.awayTeamScores[0];
           let awayOutcome = 3;
@@ -158,7 +210,7 @@ deleteDatabase.onclick = function(element) {
       tx.executeSql("DROP TABLE history");
       db.transaction(function(tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "history(manager TEXT, week INTEGER, year INTEGER, vs TEXT, player TEXT, playerPosition TEXT, score FLOAT, isHomeGame BOOLEAN)", []);
+                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
       });
       db.transaction(function(tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +

@@ -2,11 +2,82 @@
 <html>
   <head>
     <style>
+      .options-container {
+        width: 450px;
+      }
+      .header {
+        height: 20px;
+        background-color: #1D7225;
+        color: white;
+        font-size: 16px;
+        padding: 5px;
+        border-radius: 4px 4px 0px 0px;
+        margin-bottom: 1px;
+      }
+      .container {
+        background-color: #F2F2E8;
+        color: black;
+      }
+      .container-row {
+        padding: 5px;
+      }
+      ul {
+        list-style: none;
+      }
+      li {
+        width: 280px;
+        position: relative;
+        margin: 7px;
+      }
+      li input {
+        right: 0px;
+        position: absolute;
+      }
+      .sub-header {
+        height: 16px;
+        background-color: #6DBB75;
+        color: white;
+        font-size: 12px;
+        padding: 5px;
+      }
+      .button-container {
+        text-align: right;
+        margin-top: 5px;
+      }
     </style>
   </head>
   <body>
-    </div>
     <div>
+      <div class="options-container">
+        <div class="header">
+          ESPN Fantasy Football League Note Generator Options
+        </div>
+        <div class="container">
+          <div class="sub-header">
+            Previous Records
+          </div>
+          <div class="container-row">
+            <ul>
+              <li>Quarter Back - Game: <input type="number" step="0.1" id="QBG" /></li>
+              <li>Quarter Back - Season: <input type="number" step="0.1" id="QBS" /></li>
+              <li>Running Back - Game: <input type="number" step="0.1" id="RBG" /></li>
+              <li>Running Back - Season: <input type="number" step="0.1" id="RBS" /></li>
+              <li>Wide Reciever - Game: <input type="number" step="0.1" id="WRG" /></li>
+              <li>Wide Reciever - Season: <input type="number" step="0.1" id="WRS" /></li>
+              <li>Tight End - Game: <input type="number" step="0.1" id="TEG" /></li>
+              <li>Tight End - Season: <input type="number" step="0.1" id="TES" /></li>
+              <li>D/ST - Game: <input type="number" step="0.1" id="DSTG" /></li>
+              <li>D/ST - Season: <input type="number" step="0.1" id="DSTS" /></li>
+              <li>Kicker - Game: <input type="number" step="0.1" id="KG" /></li>
+              <li>Kicker - Season: <input type="number" step="0.1" id="KS" /></li>
+            </ul>
+          </div>
+        </div>
+        <div class="button-container">
+          <button id="reset">Reset</button>
+          <button id="save">Save</button>
+        </div>
+      </div>
     </div>
   </body>
   <script src="options.js"></script>

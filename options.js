@@ -1,3 +1,6 @@
+let currentLeague = null;
+const container = document.getElementById('container-body');
+const leagueSelector = document.getElementById('league-selector');
 let saveButton = document.getElementById('save');
 let QBG = document.getElementById('QBG');
 let QBGName = document.getElementById('QBG-Name');
@@ -24,39 +27,58 @@ let KGName = document.getElementById('KG-Name');
 let KS = document.getElementById('KS');
 let KSName = document.getElementById('KS-Name');
 
-chrome.storage.sync.get(['QBG', 'QBS', 'RBG', 'RBS', 'WRG', 'WRS', 'TEG', 'TES', 'DSTG', 'DSTS', 'KG', 'KS'], function(data) {
-    lastSync = data.lastSync;
-    QBG.value = data.QBG.score;
-    QBS.value = data.QBS.score;
-    RBG.value = data.RBG.score;
-    RBS.value = data.RBS.score;
-    WRG.value = data.WRG.score;
-    WRS.value = data.WRS.score;
-    TEG.value = data.TEG.score;
-    TES.value = data.TES.score;
-    DSTG.value = data.DSTG.score;
-    DSTS.value = data.DSTS.score;
-    KG.value = data.KG.score;
-    KS.value = data.KS.score;
+chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
+  currentLeague = (result.leagueDBNames.length > 0) ? result.leagueDBNames[0] : null;
+  let options = [];
+  if(currentLeague) {
+    //leagueTitle.innerHTML = result.leagueNameMap[currentLeague];
+    for(var i = 0; i < result.leagueDBNames.length; i++) {
+      let selected = (i === 0) ? 'selected' : '';
+      options.push(`<option key='${result.leagueDBNames[i]}' ${selected}>${result.leagueNameMap[result.leagueDBNames[i]]}</option>`)
+    }
+    leagueSelector.innerHTML = options;
+    chrome.storage.sync.get([currentLeague], (data) => {
+      console.log(data);
+      /*
+      QBG.value = data.QBG.score;
+      QBS.value = data.QBS.score;
+      RBG.value = data.RBG.score;
+      RBS.value = data.RBS.score;
+      WRG.value = data.WRG.score;
+      WRS.value = data.WRS.score;
+      TEG.value = data.TEG.score;
+      TES.value = data.TES.score;
+      DSTG.value = data.DSTG.score;
+      DSTS.value = data.DSTS.score;
+      KG.value = data.KG.score;
+      KS.value = data.KS.score;
 
-    QBGName.value = data.QBG.name;
-    QBSName.value = data.QBS.name;
-    RBGName.value = data.RBG.name;
-    RBSName.value = data.RBS.name;
-    WRGName.value = data.WRG.name;
-    WRSName.value = data.WRS.name;
-    TEGName.value = data.TEG.name;
-    TESName.value = data.TES.name;
-    DSTGName.value = data.DSTG.name;
-    DSTSName.value = data.DSTS.name;
-    KGName.value = data.KG.name;
-    KSName.value = data.KS.name;
-  });
+      QBGName.value = data.QBG.name;
+      QBSName.value = data.QBS.name;
+      RBGName.value = data.RBG.name;
+      RBSName.value = data.RBS.name;
+      WRGName.value = data.WRG.name;
+      WRSName.value = data.WRS.name;
+      TEGName.value = data.TEG.name;
+      TESName.value = data.TES.name;
+      DSTGName.value = data.DSTG.name;
+      DSTSName.value = data.DSTS.name;
+      KGName.value = data.KG.name;
+      KSName.value = data.KS.name;
+      */
+    });
+  } else {
+    container.innerHTML = "<div class='container' style='padding:25px; text-align:center;'>Upload league database before adding league options</div>";
+  }
+});
+
 
 saveButton.onclick = function(element) {
   alert("saved");
-  chrome.storage.sync.set({QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
+  const savedObject = {};
+  savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
     WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
-    DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value}}, function() {
+    DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value}};
+  chrome.storage.sync.set(savedObject, function() {
   });
 };

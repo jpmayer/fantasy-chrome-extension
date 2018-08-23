@@ -11,64 +11,81 @@ let lastSync = null;
 let firstYear = null;
 let currentYear = (new Date()).getUTCFullYear();
 let leagueId = null;
-let QBG = null;
-let QBS= null;
-let RBG = null;
-let RBS = null;
-let WRG = null;
-let WRS = null;
-let TEG = null;
-let TES = null;
-let DSTG = null;
-let DSTS = null;
-let KG = null;
-let KS = null;
+let QBG = null, QBS= null, RBG = null, RBS = null, WRG = null, WRS = null;
+let TEG = null, TES = null, DSTG = null, DSTS = null, KG = null, KS = null;
+let leagueLocalStorage = {};
+let leagueDBNames = null;
+let leagueName = '';
+let leagueNameMap = null;
+let dbName = '';
 
-chrome.storage.sync.get(['lastSync', 'QBG', 'QBS', 'RBG', 'RBS', 'WRG', 'WRS', 'TEG', 'TES', 'DSTG', 'DSTS', 'KG', 'KS'], function(data) {
-    lastSync = data.lastSync;
-    //Get old records from extension options
-    QBG = data.QBG;
-    QBS = data.QBS;
-    RBG = data.RBG;
-    RBS = data.RBS;
-    WRG = data.WRG;
-    WRS = data.WRS;
-    TEG = data.TEG;
-    TES = data.TES;
-    DSTG = data.DSTG;
-    DSTS = data.DSTS;
-    KG = data.KG;
-    KS = data.KS;
-    //set last sync display time
-    syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+//get initial options - league id and name, lastSync and former saved options
+chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], function(data) {
+  leagueDBNames = (data.leagueDBNames) ? data.leagueDBNames : [];
+  leagueNameMap = (data.leagueNameMap) ? data.leagueNameMap : {};
+
+  chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+      url = tabs[0].url;
+      chrome.tabs.executeScript(
+        tabs[0].id,
+        {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
+      function (results) {
+        firstYear = results[0];
+      });
+
+      chrome.tabs.executeScript(
+        tabs[0].id,
+        {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
+      function (results) {
+        leagueName = results[0];
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("GET", "http://games.espn.com/ffl/api/v2/boxscore?leagueId=1032115&seasonId=2018&matchupPeriodId=1", false);
+        xhr.send();
+
+        var result = xhr.responseText;
+        leagueId = url.split('leagueId=')[1].split('&')[0];
+        dbName = 'league-' + leagueId;
+
+        if(leagueDBNames.indexOf(dbName) === -1) {
+          leagueDBNames.push(dbName);
+          leagueNameMap[dbName] = leagueName;
+        }
+
+        chrome.storage.sync.get([dbName], function(data) {
+            if(data[dbName]) {
+              lastSync = data[dbName].lastSync;
+
+              leagueLocalStorage = data[dbName];
+              //Get old records from extension options
+              QBG = data[dbName].QBG;
+              QBS = data[dbName].QBS;
+              RBG = data[dbName].RBG;
+              RBS = data[dbName].RBS;
+              WRG = data[dbName].WRG;
+              WRS = data[dbName].WRS;
+              TEG = data[dbName].TEG;
+              TES = data[dbName].TES;
+              DSTG = data[dbName].DSTG;
+              DSTS = data[dbName].DSTS;
+              KG = data[dbName].KG;
+              KS = data[dbName].KS;
+            }
+            //set last sync display time
+            syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+          });
+
+        html5rocks.webdb = {};
+        html5rocks.webdb.db = null;
+
+        html5rocks.webdb.open = function() {
+          var dbSize = 5 * 1024 * 1024; // 5MB
+          html5rocks.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
+        }
+
+        html5rocks.webdb.open();
+      });
   });
-
-chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-    url = tabs[0].url;
-    chrome.tabs.executeScript(
-      tabs[0].id,
-      {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
-    function (results) {
-      firstYear = results[0];
-    });
-    var xhr = new XMLHttpRequest();
-
-    xhr.open("GET", "http://games.espn.com/ffl/api/v2/boxscore?leagueId=1032115&seasonId=2018&matchupPeriodId=1", false);
-    xhr.send();
-
-    var result = xhr.responseText;
-    leagueId = url.split('leagueId=')[1].split('&')[0];
-    const dbName = 'league-' + leagueId;
-
-    html5rocks.webdb = {};
-    html5rocks.webdb.db = null;
-
-    html5rocks.webdb.open = function() {
-      var dbSize = 5 * 1024 * 1024; // 5MB
-      html5rocks.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
-    }
-
-    html5rocks.webdb.open();
 });
 
 let parseTeams = function(teamArray) {
@@ -82,6 +99,7 @@ let parseTeams = function(teamArray) {
 updateDatabase.onclick = function(element) {
   // if last sync is null, clear database to be sure an old instance isnt still there
   var db = html5rocks.webdb.db;
+  chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
   if(lastSync === null) {
     db.transaction(function(tx){
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
@@ -180,7 +198,10 @@ updateDatabase.onclick = function(element) {
   }
   yearPointer--;
   lastSync = yearPointer+'-'+weekPointer;
-  chrome.storage.sync.set({lastSync: lastSync}, function() {
+  leagueLocalStorage.lastSync = lastSync;
+  let saveState = {};
+  saveState[dbName] = leagueLocalStorage;
+  chrome.storage.sync.set(saveState, function() {
     alert('Database update complete');
     syncText.innerHTML = 'Week ' + weekPointer + ", Year " + yearPointer;
   });
@@ -198,7 +219,12 @@ deleteDatabase.onclick = function(element) {
       tx.executeSql("DROP TABLE matchups");
       tx.executeSql("DROP TABLE history");
     });
-    chrome.storage.sync.set({lastSync: null}, function() {
+    leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
+    delete leagueNameMap[leagueName];
+    let saveState = {'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap};
+    leagueLocalStorage.lastSync = null;
+    saveState[dbName] = leagueLocalStorage;
+    chrome.storage.sync.set(saveState, function() {
       alert('Database deletion complete');
       lastSync = null;
       syncText.innerHTML = 'Never';

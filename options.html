@@ -6,17 +6,20 @@
         width: 450px;
       }
       .header {
-        height: 20px;
+        height: 22px;
         background-color: #1D7225;
         color: white;
         font-size: 16px;
         padding: 5px;
         border-radius: 4px 4px 0px 0px;
         margin-bottom: 1px;
+        line-height: 22px;
+        text-align: center;
       }
       .container {
         background-color: #F2F2E8;
         color: black;
+        margin-top: 1px;
       }
       .container-row {
         padding: 5px;
@@ -46,6 +49,9 @@
         text-align: right;
         margin-top: 5px;
       }
+      #league-selector {
+        display: inline-block;
+      }
     </style>
   </head>
   <body>
@@ -53,36 +59,42 @@
       <div class="options-container">
         <div class="header">
           ESPN Fantasy Football League Note Generator Options
+
         </div>
-        <div class="container">
+        <div id="container-body">
           <div class="sub-header">
-            Previous Records
+            League: <select id="league-selector"></select>
           </div>
-          <div class="container-row">
-            <table>
-              <tr>
-                <th class="left-header">Position Record</th>
-                <th>Player Name</th>
-                <th>Score</th>
-              </tr>
-              <tr><td>Quarter Back - Game: </td><td><input type="text" id="QBG-Name" /></td><td><input type="number" step="0.1" id="QBG" /></td></tr>
-              <tr><td>Quarter Back - Season: </td><td><input type="text" id="QBS-Name" /></td><td><input type="number" step="0.1" id="QBS" /></td></tr>
-              <tr><td>Running Back - Game: </td><td><input type="text" id="RBG-Name" /></td><td><input type="number" step="0.1" id="RBG" /></td></tr>
-              <tr><td>Running Back - Season: </td><td><input type="text" id="RBS-Name" /></td><td><input type="number" step="0.1" id="RBS" /></td></tr>
-              <tr><td>Wide Reciever - Game: </td><td><input type="text" id="WRG-Name" /></td><td><input type="number" step="0.1" id="WRG" /></td></tr>
-              <tr><td>Wide Reciever - Season: </td><td><input type="text" id="WRS-Name" /></td><td><input type="number" step="0.1" id="WRS" /></td></tr>
-              <tr><td>Tight End - Game: </td><td><input type="text" id="TEG-Name" /></td><td><input type="number" step="0.1" id="TEG" /></td></tr>
-              <tr><td>Tight End - Season: </td><td><input type="text" id="TES-Name" /></td><td><input type="number" step="0.1" id="TES" /></td></tr>
-              <tr><td>D/ST - Game: </td><td><input type="text" id="DSTG-Name" /></td><td><input type="number" step="0.1" id="DSTG" /></td></tr>
-              <tr><td>D/ST - Season: </td><td><input type="text" id="DSTS-Name" /></td><td><input type="number" step="0.1" id="DSTS" /></td></tr>
-              <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
-              <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
-            </table>
+          <div class="container">
+            <div class="sub-header">
+              Previous Records
+            </div>
+            <div class="container-row">
+              <table>
+                <tr>
+                  <th class="left-header">Position Record</th>
+                  <th>Player Name</th>
+                  <th>Score</th>
+                </tr>
+                <tr><td>Quarter Back - Game: </td><td><input type="text" id="QBG-Name" /></td><td><input type="number" step="0.1" id="QBG" /></td></tr>
+                <tr><td>Quarter Back - Season: </td><td><input type="text" id="QBS-Name" /></td><td><input type="number" step="0.1" id="QBS" /></td></tr>
+                <tr><td>Running Back - Game: </td><td><input type="text" id="RBG-Name" /></td><td><input type="number" step="0.1" id="RBG" /></td></tr>
+                <tr><td>Running Back - Season: </td><td><input type="text" id="RBS-Name" /></td><td><input type="number" step="0.1" id="RBS" /></td></tr>
+                <tr><td>Wide Reciever - Game: </td><td><input type="text" id="WRG-Name" /></td><td><input type="number" step="0.1" id="WRG" /></td></tr>
+                <tr><td>Wide Reciever - Season: </td><td><input type="text" id="WRS-Name" /></td><td><input type="number" step="0.1" id="WRS" /></td></tr>
+                <tr><td>Tight End - Game: </td><td><input type="text" id="TEG-Name" /></td><td><input type="number" step="0.1" id="TEG" /></td></tr>
+                <tr><td>Tight End - Season: </td><td><input type="text" id="TES-Name" /></td><td><input type="number" step="0.1" id="TES" /></td></tr>
+                <tr><td>D/ST - Game: </td><td><input type="text" id="DSTG-Name" /></td><td><input type="number" step="0.1" id="DSTG" /></td></tr>
+                <tr><td>D/ST - Season: </td><td><input type="text" id="DSTS-Name" /></td><td><input type="number" step="0.1" id="DSTS" /></td></tr>
+                <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
+                <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
+              </table>
+            </div>
           </div>
-        </div>
-        <div class="button-container">
-          <button id="reset">Reset</button>
-          <button id="save">Save</button>
+          <div class="button-container">
+            <button id="reset">Reset</button>
+            <button id="save">Save</button>
+          </div>
         </div>
       </div>
     </div>

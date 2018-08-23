@@ -15,9 +15,16 @@
       .container {
         background-color: #F2F2E8;
         color: black;
+        width: fit-content;
       }
       .container-row {
         padding: 5px;
+      }
+      #create-screenshot {
+        float: left;
+      }
+      #screenshot-img {
+        float: right;
       }
       .sub-header {
         height: 16px;
@@ -30,11 +37,10 @@
     </style>
   </head>
   <div class="container">
-    <div class="header">
-      SCREENSHOT
-    </div>
-    <div class="container-row" id="create-screenshot" ></div>
-    <img id="screenshot-img"/>
+    <div class="container-row">
+      <div id="create-screenshot" ></div>
+      <img id="screenshot-img"/>
+    </div>    
   </div>
 </html>
 <script src="html2canvas.js"></script>

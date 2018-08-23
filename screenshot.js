@@ -8,7 +8,8 @@ chrome.storage.local.get(['payload'], function(result){
   }}).then(function(canvas) {
     console.log("tainted");
     document.getElementById("screenshot-img").src = canvas.toDataURL();
-    //document.getElementById("create-screenshot").style.display = "none";
+    //Comment the below line to retain the original table
+    document.getElementById("create-screenshot").style.display = "none";
   });;
 })
 

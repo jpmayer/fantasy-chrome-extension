@@ -83,7 +83,6 @@ updateDatabase.onclick = function(element) {
   // if last sync is null, clear database to be sure an old instance isnt still there
   var db = html5rocks.webdb.db;
   if(lastSync === null) {
-    console.log("create tables");
     db.transaction(function(tx){
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                     "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);

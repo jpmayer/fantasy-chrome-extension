@@ -21,17 +21,19 @@
       .container-row {
         padding: 5px;
       }
-      ul {
-        list-style: none;
+      table {
+        margin-left: auto;
+        margin-right: auto;
       }
-      li {
-        width: 280px;
-        position: relative;
-        margin: 7px;
+      th.left-header {
+        text-align: left;
+        width: 50%;
       }
-      li input {
-        right: 0px;
-        position: absolute;
+      td input[type="number"] {
+        width: 50px;
+      }
+      td input {
+        text-align: center;
       }
       .sub-header {
         height: 16px;
@@ -57,20 +59,25 @@
             Previous Records
           </div>
           <div class="container-row">
-            <ul>
-              <li>Quarter Back - Game: <input type="number" step="0.1" id="QBG" /></li>
-              <li>Quarter Back - Season: <input type="number" step="0.1" id="QBS" /></li>
-              <li>Running Back - Game: <input type="number" step="0.1" id="RBG" /></li>
-              <li>Running Back - Season: <input type="number" step="0.1" id="RBS" /></li>
-              <li>Wide Reciever - Game: <input type="number" step="0.1" id="WRG" /></li>
-              <li>Wide Reciever - Season: <input type="number" step="0.1" id="WRS" /></li>
-              <li>Tight End - Game: <input type="number" step="0.1" id="TEG" /></li>
-              <li>Tight End - Season: <input type="number" step="0.1" id="TES" /></li>
-              <li>D/ST - Game: <input type="number" step="0.1" id="DSTG" /></li>
-              <li>D/ST - Season: <input type="number" step="0.1" id="DSTS" /></li>
-              <li>Kicker - Game: <input type="number" step="0.1" id="KG" /></li>
-              <li>Kicker - Season: <input type="number" step="0.1" id="KS" /></li>
-            </ul>
+            <table>
+              <tr>
+                <th class="left-header">Position Record</th>
+                <th>Player Name</th>
+                <th>Score</th>
+              </tr>
+              <tr><td>Quarter Back - Game: </td><td><input type="text" id="QBG-Name" /></td><td><input type="number" step="0.1" id="QBG" /></td></tr>
+              <tr><td>Quarter Back - Season: </td><td><input type="text" id="QBS-Name" /></td><td><input type="number" step="0.1" id="QBS" /></td></tr>
+              <tr><td>Running Back - Game: </td><td><input type="text" id="RBG-Name" /></td><td><input type="number" step="0.1" id="RBG" /></td></tr>
+              <tr><td>Running Back - Season: </td><td><input type="text" id="RBS-Name" /></td><td><input type="number" step="0.1" id="RBS" /></td></tr>
+              <tr><td>Wide Reciever - Game: </td><td><input type="text" id="WRG-Name" /></td><td><input type="number" step="0.1" id="WRG" /></td></tr>
+              <tr><td>Wide Reciever - Season: </td><td><input type="text" id="WRS-Name" /></td><td><input type="number" step="0.1" id="WRS" /></td></tr>
+              <tr><td>Tight End - Game: </td><td><input type="text" id="TEG-Name" /></td><td><input type="number" step="0.1" id="TEG" /></td></tr>
+              <tr><td>Tight End - Season: </td><td><input type="text" id="TES-Name" /></td><td><input type="number" step="0.1" id="TES" /></td></tr>
+              <tr><td>D/ST - Game: </td><td><input type="text" id="DSTG-Name" /></td><td><input type="number" step="0.1" id="DSTG" /></td></tr>
+              <tr><td>D/ST - Season: </td><td><input type="text" id="DSTS-Name" /></td><td><input type="number" step="0.1" id="DSTS" /></td></tr>
+              <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
+              <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
+            </table>
           </div>
         </div>
         <div class="button-container">

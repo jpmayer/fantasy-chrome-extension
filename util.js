@@ -279,13 +279,15 @@ const getAllTimeLeaderBoard = (recordArray, callback) => {
     let trophyString = '', sackoString = '';
     let pointDiff = (recordArray[i].pointDiff > 0) ? "+" + recordArray[i].pointDiff.toFixed(1) : recordArray[i].pointDiff.toFixed(1);
     if(recordArray[i].sackos > 0) {
+      let poopURL = chrome.extension.getURL("images/poop.png");
       for(var s = 0; s < recordArray[i].sackos; s++) {
-        sackoString = sackoString + "<img src='https://www.emojibase.com/resources/img/emojis/apple/x1f4a9.png.pagespeed.ic.292Eth5N9Z.png' height='16px' style='position:relative;top:3px'/>";
+        sackoString = sackoString + "<img src='"+ poopURL +"' height='16px' style='position:relative;top:3px'/>";
       }
     }
     if(recordArray[i].championships > 0) {
+      let trophyURL = chrome.extension.getURL("images/trophy.png");
       for(var c = 0; c < recordArray[i].championships; c++) {
-        trophyString = trophyString + "<img src='https://i0.wp.com/freepngimages.com/wp-content/uploads/2015/10/gold-trophy-transparent-background.png' height='16px' style='position:relative;top:3px'/>";
+        trophyString = trophyString + "<img src='"+ trophyURL +"' height='16px' style='position:relative;top:3px'/>";
       }
     }
     if(recordArray[i].winPercentage < 50 && !thresholdReached) {

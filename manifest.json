@@ -2,11 +2,20 @@
   "name": "ESPN LM Note Builder",
   "version": "1.0",
   "description": "Build power rankings and leader boards for your ESPN Fantasy Football League!",
-  "permissions": ["activeTab", "declarativeContent", "storage", "http://games.espn.com"],
+  "permissions": ["activeTab", "tabs", "declarativeContent", "storage", "http://games.espn.com"],
   "background": {
     "scripts": ["script.js"],
     "persistent": false
   },
+  "content_scripts": [
+    {
+      "matches": ["http://games.espn.com"],
+      "js": ["html2canvas.js", "open-dialog.js", "screenshot.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    "screenshot.js"
+  ],
   "options_page": "options.html",
   "page_action": {
     "default_popup": "popup.html",
@@ -23,5 +32,5 @@
     "48": "images/get_started48.png",
     "128": "images/get_started128.png"
   },
-  "manifest_version": 2
+  "manifest_version": 3
 }

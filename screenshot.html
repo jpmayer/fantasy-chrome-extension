@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .header {
+        height: 20px;
+        width: fit-content;
+        background-color: #1D7225;
+        color: white;
+        font-size: 16px;
+        padding: 5px;
+        border-radius: 4px 4px 0px 0px;
+        margin-bottom: 1px;
+      }
+      .container {
+        background-color: #F2F2E8;
+        color: black;
+        width: fit-content;
+      }
+      .container-row {
+        padding: 5px;
+      }
+      #create-screenshot {
+        float: left;
+      }
+      #screenshot-img {
+        float: right;
+      }
+      .sub-header {
+        height: 16px;
+        background-color: #6DBB75;
+        color: white;
+        font-size: 12px;
+        padding: 5px;
+      }
+      
+    </style>
+  </head>
+  <div class="container">
+    <div class="container-row">
+      <div id="create-screenshot" ></div>
+      <img id="screenshot-img"/>
+    </div>    
+  </div>
+</html>
+<script src="html2canvas.js"></script>
+<script src="screenshot.js"></script>

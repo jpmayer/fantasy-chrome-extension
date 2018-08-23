@@ -309,5 +309,6 @@ const getAllTimeLeaderBoard = (recordArray, callback) => {
   resultString = resultString + ".acuna{font-size: 7px;line-height: 7px;color: white;}"
   resultString = resultString + "#winLeader td b{padding-left:4px;padding-right:4px;}"
   resultString = resultString + "</style>"
+  console.log(resultString);
   callback(resultString);
 }

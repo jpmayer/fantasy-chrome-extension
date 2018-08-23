@@ -9,8 +9,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://games.espn.com"],
-      "js": ["html2canvas.js", "open-dialog.js", "screenshot.js"]
+      "matches": ["http://*.espn.com/*"],
+      "js": ["html2canvas.min.js", "screenshot.js"]
     }
   ],
   "web_accessible_resources": [

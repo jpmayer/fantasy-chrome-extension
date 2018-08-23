@@ -83,10 +83,8 @@ updateDatabase.onclick = function(element) {
   // if last sync is null, clear database to be sure an old instance isnt still there
   var db = html5rocks.webdb.db;
   if(lastSync === null) {
+    console.log("create tables");
     db.transaction(function(tx){
-      tx.executeSql("DROP TABLE rankings");
-      tx.executeSql("DROP TABLE matchups");
-      tx.executeSql("DROP TABLE history");
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                     "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
@@ -200,18 +198,6 @@ deleteDatabase.onclick = function(element) {
       tx.executeSql("DROP TABLE rankings");
       tx.executeSql("DROP TABLE matchups");
       tx.executeSql("DROP TABLE history");
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
-      });
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", []);
-      });
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", []);
-      });
     });
     chrome.storage.sync.set({lastSync: null}, function() {
       alert('Database deletion complete');
@@ -242,10 +228,10 @@ recordBook.onclick = function(element) {
           console.log(html);
           chrome.storage.local.set({'payload': html});
         }
-        
+
       }
     );
-  });  
+  });
 };
 
 allTimeWins.onclick = function(element) {

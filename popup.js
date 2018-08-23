@@ -1,5 +1,6 @@
 const html5rocks = {};
 let recordBook = document.getElementById('record-book');
+let allTimeWins = document.getElementById('all-time-wins');
 let updateDatabase = document.getElementById('update-database');
 let deleteDatabase = document.getElementById('delete-database');
 let syncText = document.getElementById('database-last-update');
@@ -8,6 +9,7 @@ let lmNote = document.getElementById('lm-note');
 let url = ""
 let lastSync = null;
 let firstYear = null;
+let currentYear = (new Date()).getUTCFullYear();
 let leagueId = null;
 let QBG = null;
 let QBS= null;
@@ -55,7 +57,6 @@ chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
     xhr.send();
 
     var result = xhr.responseText;
-    //alert(result);
     leagueId = url.split('leagueId=')[1].split('&')[0];
     const dbName = 'league-' + leagueId;
 
@@ -67,48 +68,37 @@ chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
       html5rocks.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
     }
 
-    html5rocks.webdb.onError = function(tx, e) {
-      alert("There has been an error: " + e.message);
-    }
-
-    html5rocks.webdb.onSuccess = function(tx, e) {
-      alert("success");
-    }
-
-    html5rocks.webdb.createTable = function() {
-      var db = html5rocks.webdb.db;
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
-      });
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", []);
-      });
-      db.transaction(function(tx) {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", []);
-      });
-    }
-
     html5rocks.webdb.open();
-    html5rocks.webdb.createTable();
 });
 
 let parseTeams = function(teamArray) {
   const ownerMap = {};
   teamArray.forEach(function(team){
-    ownerMap[team.teamId] = team.owners[0].firstName + " " + team.owners[0].lastName;
+    ownerMap[team.teamId] = team.owners[0].firstName.trim() + " " + team.owners[0].lastName.trim();
   });
   return ownerMap;
 }
 
 updateDatabase.onclick = function(element) {
+  // if last sync is null, clear database to be sure an old instance isnt still there
+  var db = html5rocks.webdb.db;
+  if(lastSync === null) {
+    db.transaction(function(tx){
+      tx.executeSql("DROP TABLE rankings");
+      tx.executeSql("DROP TABLE matchups");
+      tx.executeSql("DROP TABLE history");
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", []);
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", []);
+    });
+  }
+
   // update from last sync to present - if no last sync, then from firstYear
   let yearPointer = (lastSync) ? lastSync.split("-")[0] : firstYear;
   let weekPointer = (lastSync) ? lastSync.split("-")[1] : 1;
-  const currentYear = (new Date()).getUTCFullYear();
-  var db = html5rocks.webdb.db;
 
   for(yearPointer; yearPointer <= currentYear; yearPointer++) {
     //get team info for the year to match with ids later
@@ -161,7 +151,7 @@ updateDatabase.onclick = function(element) {
                     let position = playerStats.player.eligibleSlotCategoryIds[0];
                     db.transaction(function(tx){
                       tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
-                          [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName + " " + playerStats.player.lastName), position, playerStats.currentPeriodRealStats.appliedStatTotal]);
+                          [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, playerStats.currentPeriodRealStats.appliedStatTotal]);
                      });
                   }
                 }
@@ -270,4 +260,28 @@ recordBook.onclick = function(element) {
   });  
 };
 
+allTimeWins.onclick = function(element) {
+  const onReady = (htmlBlock) => {
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      chrome.tabs.executeScript(
+          tabs[0].id,
+          {code: 'document.getElementById("lm-note").innerHTML = "' + htmlBlock + '";'});
+    });
+  }
+  getManagers(html5rocks.webdb.db, function(managerList) {
+    getRecords(html5rocks.webdb.db, managerList, function(records){
+      getAllManagersPoints(html5rocks.webdb.db, managerList, function(points){
+        var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
+        getChampionships(html5rocks.webdb.db, yearList, function(champions){
+          getSackos(html5rocks.webdb.db, yearList, function(sackos){
+            getAllManagersPlayoffAppearences(html5rocks.webdb.db, managerList, function(playoffApps){
+              const mergedRecords = mergeDataIntoRecords(records, sackos, champions, playoffApps, points);
+              getAllTimeLeaderBoard(mergedRecords, onReady);
+            });
+          })
+        })
+      })
+    })
+  });
 
+}

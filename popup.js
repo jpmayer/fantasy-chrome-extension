@@ -238,7 +238,6 @@ recordBook.onclick = function(element) {
     url: chrome.extension.getURL('screenshot.html'),
     active: true
   }, function(tab) {
-    // After the tab has been created, open a window to inject the tab
     chrome.windows.create({
         tabId: tab.id,
         type: 'popup',
@@ -246,18 +245,13 @@ recordBook.onclick = function(element) {
     });
   });
 
-  // var script = document.createElement('script');
-  // script.src = chrome.extension.getURL('screenshot.js');
-
-  // script.onload = function() {
-  //   window.postMessage({ type: "record_book", value: html }, "*");
-  // }
-  // document.body.appendChild(script);
-
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.executeScript(
       tabs[0].id,
-      {file: "screenshot.js"}
+      {file: "screenshot.js"},
+      function (){ 
+        chrome.tabs.sendMessage(tabs[0].id, html);
+      }
     );
   });  
 };

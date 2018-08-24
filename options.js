@@ -1,6 +1,7 @@
 let currentLeague = null;
 const container = document.getElementById('container-body');
 const leagueSelector = document.getElementById('league-selector');
+const categories = document.getElementsByClassName('category');
 let saveButton = document.getElementById('save');
 let QBG = document.getElementById('QBG');
 let QBGName = document.getElementById('QBG-Name');
@@ -26,6 +27,19 @@ let KG = document.getElementById('KG');
 let KGName = document.getElementById('KG-Name');
 let KS = document.getElementById('KS');
 let KSName = document.getElementById('KS-Name');
+
+for(var h = 0; h < categories.length; h++) {
+  ((index) => {
+    categories[index].addEventListener("click", () => {
+      if(categories[index].className.indexOf('active') === -1) {
+        for(var j = 0; j < categories.length; j++) {
+          categories[j].classList.remove('active');
+        }
+        categories[index].classList.add('active');
+      }
+    });
+  })(h);
+}
 
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
   currentLeague = (result.leagueDBNames.length > 0) ? result.leagueDBNames[0] : null;

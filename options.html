@@ -19,10 +19,12 @@
       .container {
         background-color: #F2F2E8;
         color: black;
-        margin-top: 1px;
       }
       .container-row {
-        padding: 5px;
+        padding: 0px;
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height .25s linear;
       }
       table {
         margin-left: auto;
@@ -44,6 +46,19 @@
         color: white;
         font-size: 12px;
         padding: 5px;
+        user-select: none;
+        margin-bottom: 1px;
+      }
+      .category.active > .container-row {
+        max-height: 300px;
+        padding: 5px;
+      }
+      .category.active > .sub-header {
+        margin-bottom: 0px;
+        background: #1D7225;
+      }
+      .category > .sub-header {
+        cursor: pointer;
       }
       .button-container {
         text-align: right;
@@ -51,6 +66,12 @@
       }
       #league-selector {
         display: inline-block;
+      }
+      .category .accordian-icon::before {
+        content: "+";
+      }
+      .category.active .accordian-icon::before {
+        content: "-";
       }
     </style>
   </head>
@@ -65,9 +86,9 @@
           <div class="sub-header">
             League: <select id="league-selector"></select>
           </div>
-          <div class="container">
+          <div class="container category active">
             <div class="sub-header">
-              Previous Records
+              <span class="accordian-icon" /> Previous Records
             </div>
             <div class="container-row">
               <table>
@@ -89,6 +110,22 @@
                 <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
                 <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
               </table>
+            </div>
+          </div>
+          <div class="container category">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Manager Options
+            </div>
+            <div class="container-row">
+              Some form here
+            </div>
+          </div>
+          <div class="container category">
+            <div class="sub-header">
+              <span class="accordian-icon" /> General Options
+            </div>
+            <div class="container-row">
+              Some form here
             </div>
           </div>
           <div class="button-container">

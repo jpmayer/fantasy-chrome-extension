@@ -6,6 +6,7 @@ let deleteDatabase = document.getElementById('delete-database');
 let syncText = document.getElementById('database-last-update');
 let screenshot = document.getElementById('create-screenshot');
 let lmNote = document.getElementById('lm-note');
+let nameDisplay = document.getElementById('league-name');
 let url = ""
 let lastSync = null;
 let firstYear = null;
@@ -38,6 +39,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], function(data) {
         {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
       function (results) {
         leagueName = results[0];
+        nameDisplay.innerHTML = leagueName;
         var xhr = new XMLHttpRequest();
 
         xhr.open("GET", "http://games.espn.com/ffl/api/v2/boxscore?leagueId=1032115&seasonId=2018&matchupPeriodId=1", false);

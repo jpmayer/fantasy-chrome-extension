@@ -11,7 +11,7 @@ $ git clone https://github.com/jpmayer/fantasy-chrome-extension.git
 
 Open Chrome Extensions in browser
 
-<chrome://extensions/>
+> [chrome://extensions/](chrome://extensions/)
 
 Choose to 'Load Unpacked' and choose the directory of the pulled code. (You may have to switch into Developer Mode first)
 

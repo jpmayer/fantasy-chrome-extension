@@ -31,6 +31,12 @@ The power ranking action will require more input before rendering.
 
 ## Options
 
-Once the league database has been uploaded you can visit the extension options page via the Details -> Extension Options flow in the <chrome://extensions/> page.
+Navigate to
 
-Here you can add in old league records, update manager display names, and set some other personal league options. These are all completely optional and are here to provide a more personal experience.
+> [chrome://extensions/](chrome://extensions/)
+
+Find the ESPN LM Note Builder extension in the list.
+
+Click "Details". Then find and select "Extension options"
+
+Here you can add in old league records, update manager display names, and set some other personal league options. These are all completely optional and are here to provide a more personal experience. The options are per league and can only be set on leagues who have a database stored in local storage (see the Usage section)

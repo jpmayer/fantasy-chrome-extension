@@ -149,7 +149,7 @@ updateDatabase.onclick = function(element) {
       }
 
       week.matchups.forEach(function(matchup, index){
-        if(!matchup.isBye && (periodId <= 13 || (periodId > 13 && periodId < 16 && index <= 2) || (periodId === 16 && index < 1)) ) {
+        if(!matchup.isBye && (periodId <= 13 || (periodId === 14 && index < 4) || (periodId === 15 && index < 2) || (periodId === 16 && index < 1)) ) {
 
           if(currentYear - seasonId <= 1) {
             // if current year or previous year, calculate player records

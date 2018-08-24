@@ -4,23 +4,23 @@
   "description": "Build power rankings and leader boards for your ESPN Fantasy Football League!",
   "permissions": ["activeTab", "tabs", "declarativeContent", "storage", "http://games.espn.com"],
   "background": {
-    "scripts": ["script.js"],
+    "scripts": ["js/script.js"],
     "persistent": false
   },
   "content_scripts": [
     {
       "matches": ["http://*.espn.com/*"],
-      "js": ["html2canvas.min.js", "screenshot.js"]
+      "js": ["vendor/html2canvas.min.js", "js/screenshot.js"]
     }
   ],
   "web_accessible_resources": [
-    "screenshot.js",
+    "js/screenshot.js",
     "images/poop.png",
     "images/trophy.png"
   ],
-  "options_page": "options.html",
+  "options_page": "html/options.html",
   "page_action": {
-    "default_popup": "popup.html",
+    "default_popup": "html/popup.html",
     "default_icon": {
       "16": "images/get_started16.png",
       "32": "images/get_started32.png",

@@ -42,6 +42,7 @@ for(var h = 0; h < categories.length; h++) {
 }
 
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
+  console.log(result);
   currentLeague = (result.leagueDBNames.length > 0) ? result.leagueDBNames[0] : null;
   let options = [];
   if(currentLeague) {

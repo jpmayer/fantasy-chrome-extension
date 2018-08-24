@@ -50,7 +50,12 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], function(data) {
         dbName = 'league-' + leagueId;
 
         if(leagueDBNames.indexOf(dbName) === -1) {
-          leagueDBNames.push(dbName);
+          if(leagueDBNames.length === 0) {
+            leagueDBNames = [dbName];
+          } else {
+            leagueDBNames.push(dbName);
+          }
+          console.log(leagueDBNames, dbName);
           leagueNameMap[dbName] = leagueName;
         }
 
@@ -101,6 +106,7 @@ let parseTeams = function(teamArray) {
 updateDatabase.onclick = function(element) {
   // if last sync is null, clear database to be sure an old instance isnt still there
   var db = html5rocks.webdb.db;
+  console.log(leagueDBNames);
   chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
   if(lastSync === null) {
     db.transaction(function(tx){
@@ -238,7 +244,7 @@ const html = "<div id='record-book'><table><tr><th colspan='3' class='header'><h
 
 recordBook.onclick = function(element) {
   chrome.windows.create({
-    url: chrome.extension.getURL('screenshot.html'),
+    url: chrome.extension.getURL('../html/screenshot.html'),
     //tabId: tabs[0].id,
     type: 'popup',
     focused: true
@@ -264,7 +270,7 @@ recordBook.onclick = function(element) {
 allTimeWins.onclick = function(element) {
   const onReady = (htmlBlock) => {
     chrome.windows.create({
-      url: chrome.extension.getURL('screenshot.html'),
+      url: chrome.extension.getURL('../html/screenshot.html'),
       //tabId: tabs[0].id,
       type: 'popup',
       focused: true

@@ -3,7 +3,7 @@
 */
 const getSacko = (db, year, callback) => {
   let query = "SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week < 14 ORDER BY manager ASC, year ASC, week ASC";
-  var db = html5rocks.webdb.db;
+  var db = leagueDatabase.webdb.db;
   db.transaction((tx) => {
     tx.executeSql(query, [year],
       (tx, rs) => {

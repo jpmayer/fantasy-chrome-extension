@@ -3,6 +3,8 @@ let recordBook = document.getElementById('record-book');
 let allTimeWins = document.getElementById('all-time-wins');
 let updateDatabase = document.getElementById('update-database');
 let deleteDatabase = document.getElementById('delete-database');
+let databaseInfo = document.getElementById('database-info');
+let loadingDiv = document.getElementById('loading-div');
 let syncText = document.getElementById('database-last-update');
 let screenshot = document.getElementById('create-screenshot');
 let lmNote = document.getElementById('lm-note');
@@ -19,6 +21,7 @@ let leagueDBNames = null;
 let leagueName = '';
 let leagueNameMap = null;
 let dbName = '';
+let lastDate = '';
 
 //get initial options - league id and name, lastSync and former saved options
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], function(data) {
@@ -55,7 +58,6 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], function(data) {
           } else {
             leagueDBNames.push(dbName);
           }
-          console.log(leagueDBNames, dbName);
           leagueNameMap[dbName] = leagueName;
         }
 
@@ -103,22 +105,68 @@ let parseTeams = function(teamArray) {
   return ownerMap;
 }
 
-updateDatabase.onclick = function(element) {
-  // if last sync is null, clear database to be sure an old instance isnt still there
-  var db = html5rocks.webdb.db;
-  console.log(leagueDBNames);
-  chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
-  if(lastSync === null) {
-    db.transaction(function(tx){
-      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                    "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
-      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                    "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", []);
-      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                    "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", []);
-    });
-  }
+const addMatchupBoxscoreToDB = (db, matchups, index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup) => {
+  let matchup = matchups.shift();
+  if(!matchup.isBye && (periodId <= 13 || (periodId === 14 && index < 4) || (periodId === 15 && index < 2) || (periodId === 16 && index < 1)) ) {
+    if(currentYear - seasonId <= 1) {
+      // if current year or previous year, calculate player records
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
+      xhr.send();
+      var boxscore = JSON.parse(xhr.responseText).boxscore;
 
+      boxscore.teams.forEach(function(teamMatchup) {
+        const teamName = teamMatchup.team.teamId;
+        teamMatchup.slots.forEach(function(playerStats) {
+          if(playerStats.slotCategoryId !== 20) {
+            // dont save bench players
+            if(playerStats.player) {
+              //only save if player slot filled
+              let position = playerStats.player.eligibleSlotCategoryIds[0];
+              db.transaction(function(tx){
+                tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                    [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, playerStats.currentPeriodRealStats.appliedStatTotal]);
+               });
+            }
+          }
+        })
+      })
+    }
+    let homeScore = matchup.homeTeamScores[0];
+    let awayScore = matchup.awayTeamScores[0];
+    let awayOutcome = 3;
+    if(matchup.outcome === 1) {
+      awayOutcome = 2;
+    } else if(matchup.outcome === 2) {
+      awayOutcome = 1;
+    }
+    // home team
+    db.transaction(function(tx){
+      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
+          [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore)]);
+     });
+    // away team
+    db.transaction(function(tx){
+      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
+          [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus))],
+        (tx, tr) => {
+          if(lastDate === (pointerYear + '-' + pointerWeek)) {
+            alert("Database Update Complete")
+            enableButtons();
+          } else {
+            loadingDiv.innerHTML = 'Uploading Week ' + pointerWeek + ', Year ' + pointerYear;
+          }
+        });
+     });
+     if(matchups.length > 0) {
+       addMatchupBoxscoreToDB(db, matchups, ++index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup);
+     }
+  } else if(matchups.length > 0) {
+    addMatchupBoxscoreToDB(db, matchups, ++index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup);
+  }
+}
+
+createTables = (db) => {
   // update from last sync to present - if no last sync, then from firstYear
   let yearPointer = (lastSync) ? lastSync.split("-")[0] : firstYear;
   let weekPointer = (lastSync) ? lastSync.split("-")[1] : 1;
@@ -140,68 +188,20 @@ updateDatabase.onclick = function(element) {
     let seasonId = leagueSchedule.seasonId;
 
     scheduleItems.some(function (week) { //add setting for this - pull from league Settings
-      let periodId = week.matchupPeriodId;
+      weekPointer = week.matchupPeriodId;
       // check for current week
       if(!week.matchups[0].isBye) {
         if(week.matchups[0].homeTeamScores[0] + week.matchups[0].awayTeamScores[0] === 0) {
-          weekPointer = periodId;
+          lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + "16" : "" + (yearPointer - 1) + "-" + periodId; // TODO: Update to last week of year
           return true;
         }
       } else if(!week.matchups[1].isBye) {
         if(week.matchups[1].homeTeamScores[0] + week.matchups[1].awayTeamScores[0] === 0) {
-          weekPointer = periodId;
+          lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + "16" : "" + (yearPointer - 1) + "-" + periodId; // TODO: Update to last week of year
           return true;
         }
       }
-
-      week.matchups.forEach(function(matchup, index){
-        if(!matchup.isBye && (periodId <= 13 || (periodId === 14 && index < 4) || (periodId === 15 && index < 2) || (periodId === 16 && index < 1)) ) {
-
-          if(currentYear - seasonId <= 1) {
-            // if current year or previous year, calculate player records
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
-            xhr.send();
-            var boxscore = JSON.parse(xhr.responseText).boxscore;
-
-            boxscore.teams.forEach(function(teamMatchup) {
-              const teamName = teamMatchup.team.teamId;
-              teamMatchup.slots.forEach(function(playerStats) {
-                if(playerStats.slotCategoryId !== 20) {
-                  // dont save bench players
-                  if(playerStats.player) {
-                    //only save if player slot filled
-                    let position = playerStats.player.eligibleSlotCategoryIds[0];
-                    db.transaction(function(tx){
-                      tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
-                          [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, playerStats.currentPeriodRealStats.appliedStatTotal]);
-                     });
-                  }
-                }
-              })
-            })
-          }
-
-          let homeScore = matchup.homeTeamScores[0];
-          let awayScore = matchup.awayTeamScores[0];
-          let awayOutcome = 3;
-          if(matchup.outcome === 1) {
-            awayOutcome = 2;
-          } else if(matchup.outcome === 2) {
-            awayOutcome = 1;
-          }
-          // home team
-          db.transaction(function(tx){
-            tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
-                [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore)]);
-           });
-          // away team
-          db.transaction(function(tx){
-            tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
-                [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus))]);
-           });
-        }
-      });
+      addMatchupBoxscoreToDB(db, week.matchups, 0, weekPointer, yearPointer, weekPointer, seasonId, ownerLookup);
     });
   }
   yearPointer--;
@@ -210,11 +210,48 @@ updateDatabase.onclick = function(element) {
   let saveState = {};
   saveState[dbName] = leagueLocalStorage;
   chrome.storage.sync.set(saveState, function() {
-    alert('Database update complete');
     syncText.innerHTML = 'Week ' + weekPointer + ", Year " + yearPointer;
   });
+}
 
+disableButtons = () => {
+  let buttons = document.getElementsByTagName('button');
+  for(var b = 0; b < buttons.length; b++) {
+    buttons[b].setAttribute('disabled','disabled');
+  }
+  databaseInfo.style.display = 'none';
+  loadingDiv.style.display = 'inline-block';
+}
 
+enableButtons = () => {
+  let buttons = document.getElementsByTagName('button');
+  for(var b = 0; b < buttons.length; b++) {
+    buttons[b].removeAttribute('disabled');
+  }
+  databaseInfo.style.display = 'inline-block';
+  loadingDiv.style.display = 'none';
+}
+
+updateDatabase.onclick = (element) => {
+
+  disableButtons();
+  var db = html5rocks.webdb.db;
+  setTimeout(() => {
+    // if last sync is null, clear database to be sure an old instance isnt still there
+    chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
+    if(lastSync === null) {
+      db.transaction(function(tx){
+        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", []);
+        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", []);
+        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                      "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", [], () => { createTables(db) });
+      });
+    } else {
+      createTables(db);
+    }
+  }, 1)
 };
 
 deleteDatabase.onclick = function(element) {
@@ -222,20 +259,23 @@ deleteDatabase.onclick = function(element) {
 
   if(shouldDelete) {
     var db = html5rocks.webdb.db;
-    db.transaction(function(tx){
+    db.transaction((tx) => {
       tx.executeSql("DROP TABLE rankings");
       tx.executeSql("DROP TABLE matchups");
       tx.executeSql("DROP TABLE history");
-    });
-    leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
-    delete leagueNameMap[leagueName];
-    let saveState = {'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap};
-    leagueLocalStorage.lastSync = null;
-    saveState[dbName] = leagueLocalStorage;
-    chrome.storage.sync.set(saveState, function() {
-      alert('Database deletion complete');
-      lastSync = null;
-      syncText.innerHTML = 'Never';
+    }, (tx, tr) => {
+      leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
+      delete leagueNameMap[leagueName];
+      let saveState = {'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap};
+      leagueLocalStorage.lastSync = null;
+      saveState[dbName] = leagueLocalStorage;
+      chrome.storage.sync.set(saveState, function() {
+        alert('Database deletion complete');
+        lastSync = null;
+        syncText.innerHTML = 'Never';
+      });
+    }, (tx, tr) => {
+      alert('Database deletion failed. Please try again');
     });
   }
 };

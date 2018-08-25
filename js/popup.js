@@ -1,6 +1,15 @@
 const leagueDatabase = {};
 leagueDatabase.webdb = {};
 leagueDatabase.webdb.db = null;
+let dbName = '';
+let leagueLocalStorage = {};
+let leagueDBNames = null;
+let leagueName = '';
+let leagueNameMap = null;
+let leagueInfo = {};
+let leagueSettings = {};
+let leagueId = null;
+
 let recordBook = document.getElementById('record-book');
 let allTimeWins = document.getElementById('all-time-wins');
 let updateDatabase = document.getElementById('update-database');
@@ -11,19 +20,14 @@ let syncText = document.getElementById('database-last-update');
 let screenshot = document.getElementById('create-screenshot');
 let lmNote = document.getElementById('lm-note');
 let nameDisplay = document.getElementById('league-name');
-let url = ""
+
 let lastSync = null;
 let firstYear = null;
 let currentYear = (new Date()).getUTCFullYear();
-let leagueId = null;
+let currentWeek = null;
+let lastDate = '';
 let QBG = null, QBS= null, RBG = null, RBS = null, WRG = null, WRS = null;
 let TEG = null, TES = null, DSTG = null, DSTS = null, KG = null, KS = null;
-let leagueLocalStorage = {};
-let leagueDBNames = null;
-let leagueName = '';
-let leagueNameMap = null;
-let dbName = '';
-let lastDate = '';
 
 const errorHandler = (transaction, error) => {
   alert("Error processing SQL: "+ error.message);
@@ -36,67 +40,69 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
   leagueNameMap = (data.leagueNameMap) ? data.leagueNameMap : {};
 
   chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, (tabs) => {
-      url = tabs[0].url;
-      chrome.tabs.executeScript(
-        tabs[0].id,
-        {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
-        (results) => {
-          firstYear = results[0];
-        });
+    chrome.tabs.executeScript(
+      tabs[0].id,
+      {code: 'var s = document.createElement("script"); var hiddenDiv = document.createElement("div"); hiddenDiv.setAttribute("hidden","hidden"); hiddenDiv.setAttribute("id", "hidden-com-div"); s.type = "text/javascript"; var code = "document.getElementById(\'hidden-com-div\').innerHTML = JSON.stringify(com.espn.games);"; s.appendChild(document.createTextNode(code)); document.body.appendChild(hiddenDiv); document.body.appendChild(s); document.getElementById("hidden-com-div").innerHTML'},
+      (leagueObject) => {
+        leagueInfo = JSON.parse(leagueObject[0]);
+        leagueId = leagueInfo.leagueId;
+        currentWeek = leagueInfo.currentScoringPeriodId;
 
-      chrome.tabs.executeScript(
-        tabs[0].id,
-        {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
-        (results) => {
-        leagueName = results[0];
-        nameDisplay.innerHTML = leagueName;
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", "http://games.espn.com/ffl/api/v2/boxscore?leagueId=1032115&seasonId=2018&matchupPeriodId=1", false);
-        xhr.send();
-
-        var result = xhr.responseText;
-        leagueId = url.split('leagueId=')[1].split('&')[0];
-        dbName = 'league-' + leagueId;
-
-        if(leagueDBNames.indexOf(dbName) === -1) {
-          if(leagueDBNames.length === 0) {
-            leagueDBNames = [dbName];
-          } else {
-            leagueDBNames.push(dbName);
-          }
-          leagueNameMap[dbName] = leagueName;
-        }
-
-        chrome.storage.sync.get([dbName], (data) => {
-            if(data[dbName]) {
-              lastSync = data[dbName].lastSync;
-
-              leagueLocalStorage = data[dbName];
-              //Get old records from extension options
-              QBG = data[dbName].QBG;
-              QBS = data[dbName].QBS;
-              RBG = data[dbName].RBG;
-              RBS = data[dbName].RBS;
-              WRG = data[dbName].WRG;
-              WRS = data[dbName].WRS;
-              TEG = data[dbName].TEG;
-              TES = data[dbName].TES;
-              DSTG = data[dbName].DSTG;
-              DSTS = data[dbName].DSTS;
-              KG = data[dbName].KG;
-              KS = data[dbName].KS;
-            }
-            //set last sync display time
-            syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+        chrome.tabs.executeScript(
+          tabs[0].id,
+          {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
+          (results) => {
+            firstYear = results[0];
           });
 
-        leagueDatabase.webdb.open = () => {
-          var dbSize = 5 * 1024 * 1024; // 5MB
-          leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
-        }
+        chrome.tabs.executeScript(
+          tabs[0].id,
+          {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
+          (results) => {
+          leagueName = results[0];
+          nameDisplay.innerHTML = leagueName;
 
-        leagueDatabase.webdb.open();
+          dbName = 'league-' + leagueId;
+
+          if(leagueDBNames.indexOf(dbName) === -1) {
+            if(leagueDBNames.length === 0) {
+              leagueDBNames = [dbName];
+            } else {
+              leagueDBNames.push(dbName);
+            }
+            leagueNameMap[dbName] = leagueName;
+          }
+
+          chrome.storage.sync.get([dbName], (data) => {
+              if(data[dbName]) {
+                lastSync = data[dbName].lastSync;
+
+                leagueLocalStorage = data[dbName];
+                //Get old records from extension options
+                QBG = data[dbName].QBG;
+                QBS = data[dbName].QBS;
+                RBG = data[dbName].RBG;
+                RBS = data[dbName].RBS;
+                WRG = data[dbName].WRG;
+                WRS = data[dbName].WRS;
+                TEG = data[dbName].TEG;
+                TES = data[dbName].TES;
+                DSTG = data[dbName].DSTG;
+                DSTS = data[dbName].DSTS;
+                KG = data[dbName].KG;
+                KS = data[dbName].KS;
+              }
+              //set last sync display time
+              syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+            });
+
+          leagueDatabase.webdb.open = () => {
+            var dbSize = 5 * 1024 * 1024; // 5MB
+            leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
+          }
+
+          leagueDatabase.webdb.open();
+        });
       });
   });
 });
@@ -109,9 +115,14 @@ let parseTeams = (teamArray) => {
   return ownerMap;
 }
 
-const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup) => {
+isValidPostSeasonMatchup = (periodId, index, champWeek) => {
+  const matchupsTillFinal = champWeek - periodId;
+  return index < Math.pow(2, matchupsTillFinal);
+}
+
+const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup) => {
   let matchup = matchups.shift();
-  if(!matchup.isBye && (periodId <= 13 || (periodId === 14 && index < 4) || (periodId === 15 && index < 2) || (periodId === 16 && index < 1)) ) {
+  if(!matchup.isBye && (periodId <= leagueSettings.finalRegularSeasonMatchupPeriodId || isValidPostSeasonMatchup(periodId, index, leagueSettings.finalMatchupPeriodId))) {
     if(currentYear - seasonId <= 1) {
       // if current year or previous year, calculate player records
       var xhr = new XMLHttpRequest();
@@ -136,8 +147,8 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, pointerW
         })
       })
     }
-    let homeScore = matchup.homeTeamScores[0];
-    let awayScore = matchup.awayTeamScores[0];
+    let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
+    let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
     let awayOutcome = 3;
     if(matchup.outcome === 1) {
       awayOutcome = 2;
@@ -154,8 +165,8 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, pointerW
       tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
           [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus))],
         (tx, tr) => {
-          loadingDiv.innerHTML = 'Uploading Week ' + pointerWeek + ', Year ' + pointerYear;
-          if(lastDate === (pointerYear + '-' + pointerWeek)) {
+          loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
+          if(lastDate === (pointerYear + '-' + periodId)) {
             setTimeout(() => {
               alert("Database Update Complete")
               enableButtons();
@@ -164,10 +175,10 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, pointerW
         }, errorHandler);
      });
      if(matchups.length > 0) {
-       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup);
+       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup);
      }
   } else if(matchups.length > 0) {
-    addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, pointerWeek, seasonId, ownerLookup);
+    addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup);
   }
 }
 
@@ -177,15 +188,19 @@ createTables = () => {
   let weekPointer = (lastSync) ? lastSync.split("-")[1] : 1;
 
   for(yearPointer; yearPointer <= currentYear; yearPointer++) {
-    //get team info for the year to match with ids later
     var xhr = new XMLHttpRequest();
+    xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=1`, false);
+    xhr.send();
+    leagueSettings = JSON.parse(xhr.responseText).leaguesettings;
+
+    //get team info for the year to match with ids later
+    xhr = new XMLHttpRequest();
     xhr.open("GET", `http://games.espn.com/ffl/api/v2/teams?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=1`, false);
     xhr.send();
     var teamInfo = JSON.parse(xhr.responseText).teams;
     let ownerLookup = parseTeams(teamInfo);
 
-
-    var xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
     xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSchedules?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=1`, false);
     xhr.send();
     var leagueSchedule = JSON.parse(xhr.responseText).leagueSchedule;
@@ -195,18 +210,11 @@ createTables = () => {
     scheduleItems.some((week) => { //add setting for this - pull from league Settings
       weekPointer = week.matchupPeriodId;
       // check for current week
-      if(!week.matchups[0].isBye) {
-        if(week.matchups[0].homeTeamScores[0] + week.matchups[0].awayTeamScores[0] === 0) {
-          lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + "16" : "" + (yearPointer - 1) + "-" + periodId; // TODO: Update to last week of year
-          return true;
-        }
-      } else if(!week.matchups[1].isBye) {
-        if(week.matchups[1].homeTeamScores[0] + week.matchups[1].awayTeamScores[0] === 0) {
-          lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + "16" : "" + (yearPointer - 1) + "-" + periodId; // TODO: Update to last week of year
-          return true;
-        }
+      if(currentYear === yearPointer && currentWeek === weekPointer) {
+        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer - 1) + "-" + weekPointer;
+        return true;
       }
-      addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, weekPointer, seasonId, ownerLookup);
+      addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, seasonId, ownerLookup);
     });
   }
   yearPointer--;
@@ -338,9 +346,10 @@ allTimeWins.onclick = (element) => {
     getRecords(leagueDatabase.webdb.db, managerList, (records) => {
       getAllManagersPoints(leagueDatabase.webdb.db, managerList, (points) => {
         var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
-        getChampionships(leagueDatabase.webdb.db, yearList, (champions) => {
-          getSackos(leagueDatabase.webdb.db, yearList, (sackos) => {
-            getAllManagersPlayoffAppearences(leagueDatabase.webdb.db, managerList, (playoffApps) => {
+        const leagueSettingsMap = getLeagueSettings(yearList, leagueId);
+        getChampionships(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (champions) => {
+          getSackos(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (sackos) => {
+            getAllManagersPlayoffAppearences(leagueDatabase.webdb.db, managerList, yearList, leagueSettingsMap, (playoffApps) => {
               const mergedRecords = mergeDataIntoRecords(records, sackos, champions, playoffApps, points);
               getAllTimeLeaderBoard(mergedRecords, onReady);
             });

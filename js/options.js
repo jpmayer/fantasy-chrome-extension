@@ -184,7 +184,9 @@ const populateManagerAlias = (managers) => {
     row.appendChild(aliasCell);
     managerTableBody.appendChild(row);
   });
-  managerOptionsDiv.style['max-height'] = window.getComputedStyle(managerOptionsDiv).getPropertyValue('height');
+  let tableHeight = window.getComputedStyle(managerTableBody).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 29;
+  managerOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
 const populateLastPlaceSelection = (years, sackoMap, owners) => {

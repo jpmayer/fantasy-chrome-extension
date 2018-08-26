@@ -310,6 +310,7 @@ const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
     resultString = resultString + `<tr class='leader-header'><td><b></b></td><td><b>Holder</b></td><td><b>Wins</b></td><td><b>Losses</b></td><td><b>Ties</b></td><td><b>Win %</b></td><td><b>Points</b></td><td><b>PPG</b></td><td><b>Diff</b></td><td><b>Titles</b></td><td><b>${lastPlaceName}</b></td><td><b>Pl App</b></td></tr>`;
     for(var i = 0; i < recordArray.length; i++){
       let trophyString = '', sackoString = '';
+      let managerName = (leagueDict.managerMap[recordArray[i].manager]) ? leagueDict.managerMap[recordArray[i].manager] : recordArray[i].manager;
       let pointDiff = (recordArray[i].pointDiff > 0) ? "+" + recordArray[i].pointDiff.toFixed(1) : recordArray[i].pointDiff.toFixed(1);
       if(recordArray[i].sackos > 0) {
         for(var s = 0; s < recordArray[i].sackos; s++) {
@@ -327,7 +328,7 @@ const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
         resultString = resultString + `<tr class='acunaRow' title='The Threshold to Measure How Good Your Team Truly is.'> <td colspan='12' class='acuna'><b>${lineName}<b></td></tr>`;
         thresholdReached = true;
       }
-      resultString = resultString + "<tr class='row'> <td class='place'>" + (i + 1) + ". </td><td>" + recordArray[i].manager + "</td><td>" + recordArray[i].wins + "</td><td>" + recordArray[i].losses + "</td><td>" + recordArray[i].ties + "</td><td>" + recordArray[i].winPercentage.toFixed(1) + "%</td><td>" + recordArray[i].pointsScored.toFixed(1) + "</td><td>" + recordArray[i].pointsPer.toFixed(1) + "</td><td>" + pointDiff + "</td><td>" + trophyString + "</td><td>" + sackoString + "</td><td>" + recordArray[i].playoffApps + "</td></tr>"
+      resultString = resultString + "<tr class='row'> <td class='place'>" + (i + 1) + ". </td><td>" + managerName + "</td><td>" + recordArray[i].wins + "</td><td>" + recordArray[i].losses + "</td><td>" + recordArray[i].ties + "</td><td>" + recordArray[i].winPercentage.toFixed(1) + "%</td><td>" + recordArray[i].pointsScored.toFixed(1) + "</td><td>" + recordArray[i].pointsPer.toFixed(1) + "</td><td>" + pointDiff + "</td><td>" + trophyString + "</td><td>" + sackoString + "</td><td>" + recordArray[i].playoffApps + "</td></tr>"
     }
     resultString = resultString + "</table></div>";
     resultString = resultString + "<style>";

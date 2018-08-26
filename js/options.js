@@ -190,7 +190,7 @@ const populateManagerAlias = (managers) => {
 }
 
 const populateLastPlaceSelection = (years, sackoMap, owners) => {
-  sackoTable.innerHTML = "";
+  sackoTable.getElementsByTagName('tbody')[0].innerHTML = "";
   years.forEach((year) => {
     const row = document.createElement('tr');
     const yearCell = document.createElement('td');
@@ -199,7 +199,7 @@ const populateLastPlaceSelection = (years, sackoMap, owners) => {
     managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
     row.appendChild(yearCell);
     row.appendChild(managerCell);
-    sackoTable.appendChild(row);
+    sackoTable.getElementsByTagName('tbody')[0].appendChild(row);
   })
   let tableHeight = window.getComputedStyle(sackoTable).getPropertyValue('height');
   const newHeight = parseInt(tableHeight.split('px')[0],10) + 129;
@@ -209,7 +209,7 @@ const populateLastPlaceSelection = (years, sackoMap, owners) => {
 const generateManagerDropdown = (managers, selectedManager, year) => {
   let selectManager = document.createElement('select');
   selectManager.setAttribute('data-year', year);
-  selectManager.addEventListener('change', (event, b) => {
+  selectManager.addEventListener('change', (event) => {
     sackoMap[event.target.getAttribute('data-year')] = event.target.value;
   });
   let noneOption = document.createElement('option');

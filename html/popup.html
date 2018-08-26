@@ -20,7 +20,7 @@
         color: black;
       }
       .container-row {
-        padding: 5px;
+        padding: 10px 5px 10px 5px;
       }
       .sub-header {
         height: 16px;
@@ -31,6 +31,10 @@
       }
       .col-8 {
         width: 32%;
+        display: inline-block;
+      }
+      .col-12 {
+        width: 49%;
         display: inline-block;
       }
       .align-left {
@@ -55,6 +59,25 @@
       span#database-last-update {
         margin-left: 5px;
       }
+      #power-rankings-table {
+        width: 100%;
+        text-align: center;
+        padding-bottom: 10px;
+      }
+      #power-rankings-table thead {
+        font-weight: bold;
+      }
+      #power-rankings-table input[type="text"] {
+        width: 90%;
+      }
+      #power-rankings-table td:first-child {
+        text-align: right;
+      }
+      #power-rankings-table select {
+        width: 95%;
+        background: #f8f8f2;
+        margin-left: 5px;
+      }
     </style>
   </head>
   <body>
@@ -77,19 +100,27 @@
           <button id="update-database">Update</button>
         </div>
       </div>
-      <div class="container align-center" style="padding: 5px 0px;">
+      <div class="container align-center">
         <div class="sub-header align-left">
-          Generate Content
+          Generate League History Content
         </div>
         <div class="container-row">
-          <div class="col-8 align-left">
+          <div class="col-12 align-left">
             <button id="all-time-wins">Leader Board</button>
           </div>
-          <div class="col-8 align-center">
+          <div class="col-12 align-center">
             <button id="record-book">Record Book</button>
           </div>
-          <div class="col-8 align-right">
-            <button id="power-rankings">Power Rankings</button>
+        </div>
+      </div>
+      <div class="container align-center">
+        <div class="sub-header align-left">
+          Weekly Power Rankings - <span id="power-ranking-week"></span>
+        </div>
+        <div class="container-row">
+          <div class="align-right">
+            <table id="power-rankings-table"><tbody><thead><td>Place</td><td>Manager</td><td>Write Up</td></thead></tbody></table>
+            <button id="power-rankings">Generate Weekly Ranking</button>
           </div>
         </div>
       </div>

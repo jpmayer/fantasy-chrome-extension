@@ -8,26 +8,29 @@ let leagueName = '';
 let leagueNameMap = null;
 let leagueInfo = {};
 let leagueSettings = {};
+let selectedYearLeagueSettings = {};
 let leagueId = null;
 
-let recordBook = document.getElementById('record-book');
-let allTimeWins = document.getElementById('all-time-wins');
-let updateDatabase = document.getElementById('update-database');
-let deleteDatabase = document.getElementById('delete-database');
-let databaseInfo = document.getElementById('database-info');
-let loadingDiv = document.getElementById('loading-div');
-let syncText = document.getElementById('database-last-update');
-let screenshot = document.getElementById('create-screenshot');
-let lmNote = document.getElementById('lm-note');
-let nameDisplay = document.getElementById('league-name');
+const recordBook = document.getElementById('record-book');
+const allTimeWins = document.getElementById('all-time-wins');
+const updateDatabase = document.getElementById('update-database');
+const deleteDatabase = document.getElementById('delete-database');
+const databaseInfo = document.getElementById('database-info');
+const loadingDiv = document.getElementById('loading-div');
+const syncText = document.getElementById('database-last-update');
+const screenshot = document.getElementById('create-screenshot');
+const lmNote = document.getElementById('lm-note');
+const nameDisplay = document.getElementById('league-name');
+const powerRankingTable = document.getElementById('power-rankings-table').getElementsByTagName('tbody')[0];
+const powerRankingWeek = document.getElementById('power-ranking-week');
 
 let lastSync = null;
 let firstYear = null;
 let currentYear = (new Date()).getUTCFullYear();
+let selectedYear = null;
 let currentWeek = null;
 let lastDate = '';
-let QBG = null, QBS= null, RBG = null, RBS = null, WRG = null, WRS = null;
-let TEG = null, TES = null, DSTG = null, DSTS = null, KG = null, KS = null;
+let previousManager = ''; // for power rankings manager dropdown
 
 //get initial options - league id and name, lastSync and former saved options
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
@@ -46,61 +49,146 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
         chrome.tabs.executeScript(
           tabs[0].id,
           {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
-          (results) => {
-            firstYear = results[0];
-          });
+          (firstYearResults) => {
+            firstYear = firstYearResults[0];
+            chrome.tabs.executeScript(
+              tabs[0].id,
+              {code: 'document.getElementById("seasonHistoryMenu").value;'},
+              (selecteYearResults) => {
+                selectedYear = selecteYearResults[0];
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${selectedYear}&matchupPeriodId=1`, false);
+                xhr.send();
+                selectedYearLeagueSettings = JSON.parse(xhr.responseText).leaguesettings;
 
-        chrome.tabs.executeScript(
-          tabs[0].id,
-          {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
-          (results) => {
-          leagueName = results[0];
-          nameDisplay.innerHTML = leagueName;
+                powerRankingWeek.innerHTML = getPowerRankingWeekNameDisplay(currentWeek, selectedYearLeagueSettings.finalRegularSeasonMatchupPeriodId, selectedYearLeagueSettings.finalMatchupPeriodId);
 
-          dbName = 'league-' + leagueId;
+                chrome.tabs.executeScript(
+                  tabs[0].id,
+                  {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
+                  (results) => {
+                  leagueName = results[0];
+                  nameDisplay.innerHTML = leagueName;
+                  dbName = 'league-' + leagueId;
 
-          if(leagueDBNames.indexOf(dbName) === -1) {
-            if(leagueDBNames.length === 0) {
-              leagueDBNames = [dbName];
-            } else {
-              leagueDBNames.push(dbName);
-            }
-            leagueNameMap[dbName] = leagueName;
-          }
+                  leagueDatabase.webdb.open = () => {
+                    var dbSize = 5 * 1024 * 1024; // 5MB
+                    leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
+                  }
+                  leagueDatabase.webdb.open();
 
-          chrome.storage.sync.get([dbName], (data) => {
-              if(data[dbName]) {
-                lastSync = data[dbName].lastSync;
+                  if(leagueDBNames.indexOf(dbName) === -1) {
+                    if(leagueDBNames.length === 0) {
+                      leagueDBNames = [dbName];
+                    } else {
+                      leagueDBNames.push(dbName);
+                    }
+                    leagueNameMap[dbName] = leagueName;
+                  }
 
-                leagueLocalStorage = data[dbName];
-                //Get old records from extension options
-                QBG = data[dbName].QBG;
-                QBS = data[dbName].QBS;
-                RBG = data[dbName].RBG;
-                RBS = data[dbName].RBS;
-                WRG = data[dbName].WRG;
-                WRS = data[dbName].WRS;
-                TEG = data[dbName].TEG;
-                TES = data[dbName].TES;
-                DSTG = data[dbName].DSTG;
-                DSTS = data[dbName].DSTS;
-                KG = data[dbName].KG;
-                KS = data[dbName].KS;
-              }
-              //set last sync display time
-              syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
-            });
+                  chrome.storage.sync.get([dbName], (data) => {
+                    if(data[dbName]) {
+                      lastSync = data[dbName].lastSync;
+                      leagueLocalStorage = data[dbName];
 
-          leagueDatabase.webdb.open = () => {
-            var dbSize = 5 * 1024 * 1024; // 5MB
-            leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
-          }
+                      // generate power ranking table
+                      console.log(leagueLocalStorage);
+                      populatePowerRankings()
 
-          leagueDatabase.webdb.open();
+                    }
+                    //set last sync display time
+                    syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+                  });
+
+
+                });
+              });
         });
-      });
+    });
   });
 });
+
+const generatePRManagerDropdown = (teamsObject, place, selectedTeam) => {
+  let selectManager = document.createElement('select');
+  selectManager.setAttribute('place', place);
+  selectManager.addEventListener('focus', (event) => {
+    previousManager = event.target.value;
+  });
+  selectManager.addEventListener('change', (event) => {
+    let selectElements = document.getElementsByTagName('select');
+    for(var s = 0; s < selectElements.length; s++) {
+      let select = selectElements[s];
+      if(select.getAttribute('place') !== event.target.getAttribute('place')) {
+        if(select.value === event.target.value) {
+          select.value = previousManager;
+          previousManager = event.target.value;
+        }
+      }
+    }
+  });
+
+  for(var teamKey in selectedYearLeagueSettings.teams) {
+    if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
+      let managerOption = document.createElement('option');
+      let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
+      managerOption.setAttribute('value', oName);
+      managerOption.innerHTML = oName; // TODO show mapped name
+      if(oName === selectedTeam) {
+        managerOption.setAttribute('selected', 'selected');
+      }
+      selectManager.appendChild(managerOption);
+    }
+  }
+  return selectManager;
+}
+
+const rankingToPlaceString = (ranking) => {
+  let place = ranking.toString();
+  if(place === '11' || place === '12' || place === '13') {
+    return place + 'th';
+  }
+  switch(place.split('').pop()) {
+    case '1': place = place + 'st'; break;
+    case '2': place = place + 'nd'; break;
+    case '3': place = place + 'rd'; break;
+    default: place = place + 'th'; break;
+  } return place;
+}
+
+const populatePowerRankings = () => {
+  const query = "SELECT manager, ranking, week, year FROM rankings WHERE week = (SELECT max(week) FROM rankings WHERE year = ?)";
+  powerRankingTable.innerHTML = "";
+  leagueDatabase.webdb.db.transaction((tx) => {
+    tx.executeSql(query, [selectedYear],
+      (tx, tr) => {
+        if(tr.rows.length === 0) {
+          for(var teamKey in selectedYearLeagueSettings.teams) {
+            if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
+              let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
+
+
+              const row = document.createElement('tr');
+              const rankingCell = document.createElement('td');
+              rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
+              const managerCell = document.createElement('td');
+              const descriptionCell = document.createElement('td');
+              managerCell.appendChild(generatePRManagerDropdown(selectedYearLeagueSettings.teams, teamKey, oName));
+              const descriptionInput = document.createElement('input');
+              descriptionInput.setAttribute('type','text');
+              descriptionCell.appendChild(descriptionInput);
+              row.appendChild(rankingCell);
+              row.appendChild(managerCell);
+              row.appendChild(descriptionCell);
+              powerRankingTable.appendChild(row);
+
+
+            }
+          }
+        }
+      }, errorHandler
+    );
+  });
+}
 
 let parseTeams = (teamArray) => {
   const ownerMap = {};

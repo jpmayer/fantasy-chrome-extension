@@ -2,6 +2,10 @@
 <html>
   <head>
     <style>
+      select#league-selector {
+        background: #f8f8f2;
+        border: none;
+      }
       .options-container {
         width: 500px;
       }
@@ -88,6 +92,7 @@
       }
       table#sacko-override tr td select{
         width: 100%;
+        background: #f8f8f2;
       }
       table#sacko-override tr td {
         text-align: center;
@@ -139,7 +144,7 @@
                 <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
                 <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
                 <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
-                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
+                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><thead><tr><th>Year</th><th>Manager</th></tr></thead><tbody></tbody></table></td></tr>
               </table>
             </div>
             </div>

@@ -312,7 +312,13 @@ recordBook.onclick = (element) => {
         if (tabs[0].incognito) {
           return;
         } else {
-          console.log(html);
+          chrome.runtime.sendMessage({
+            msg: "something_completed", 
+            data: {
+                name: "league_record_book",
+                html: html
+            }
+        });
           chrome.storage.local.set({'payload': html});
         }
       }
@@ -336,6 +342,13 @@ allTimeWins.onclick = (element) => {
             if (tabs[0].incognito) {
               return;
             } else {
+              chrome.runtime.sendMessage({
+                msg: "something_completed", 
+                data: {
+                    name: "league_all_time_wins",
+                    html: htmlBlock
+                }
+            });
               chrome.storage.local.set({'payload': htmlBlock});
             }
           }

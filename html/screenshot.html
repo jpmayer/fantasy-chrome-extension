@@ -39,14 +39,12 @@
   <div class="container">
     <div class="container-row">
       <div id="create-screenshot"></div>
-      <img onload="if(this.naturalHeight){origHeight=this.naturalHeight;origWidth=this.naturalWidth;}
-        else{img=new Image();img.src=this.src;origHeight=img.height;origWidth=img.width}
-        heightRatio=1000/origHeight;widthRatio=650/origWidth;
-        if(widthRatio<heightRatio & widthRatio<1){this.height=origHeight*widthRatio;}
-        else if(heightRatio<1){this.width=origWidth*heightRatio;}"
-        id="screenshot-img"/>
+      <img id="screenshot-img"/>
     </div>
   </div>
 </html>
 <script src="../vendor/html2canvas.min.js"></script>
+<script src="../vendor/Blob.js"></script>
+<script src="../vendor/canvas-toBlob.js"></script>
+<script src="../vendor/FileSaver.min.js"></script>
 <script src="../js/screenshot.js"></script>

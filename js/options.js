@@ -8,6 +8,7 @@ const leagueDatabase = {};
 leagueDatabase.webdb = {};
 leagueDatabase.webdb.db = null;
 const saveButton = document.getElementById('save');
+const resetButton = document.getElementById('reset');
 const QBG = document.getElementById('QBG');
 const QBGName = document.getElementById('QBG-Name');
 const QBS= document.getElementById('QBS');
@@ -168,7 +169,7 @@ const populateManagerAlias = (managers) => {
     const row = document.createElement('tr');
     const nameCell = document.createElement('td');
     nameCell.setAttribute('style','width: 33%;');
-    nameCell.innerHTML = manager;
+    nameCell.innerHTML = manager + ":";
     const aliasCell = document.createElement('td');
     const aliasInput = document.createElement('input');
     aliasInput.setAttribute('type','text');
@@ -237,3 +238,7 @@ saveButton.onclick = (element) => {
     alert("saved");
   });
 };
+
+resetButton.onclick = (element) => {
+  updateOptionsForLeague();
+}

@@ -233,6 +233,7 @@ disableButtons = () => {
     buttons[b].setAttribute('disabled','disabled');
   }
   databaseInfo.style.display = 'none';
+  loadingDiv.innerHTML = 'Loading...';
   loadingDiv.style.display = 'inline-block';
 }
 
@@ -248,9 +249,17 @@ enableButtons = () => {
 updateDatabase.onclick = (element) => {
   disableButtons();
   setTimeout(() => {
-    // if last sync is null, clear database to be sure an old instance isnt still there
-    chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
     if(lastSync === null) {
+      if(leagueDBNames.indexOf(dbName) === -1) {
+        if(leagueDBNames.length === 0) {
+          leagueDBNames = [dbName];
+        } else {
+          leagueDBNames.push(dbName);
+        }
+        leagueNameMap[dbName] = leagueName;
+      }
+      // if last sync is null, clear database to be sure an old instance isnt still there
+      chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
       leagueDatabase.webdb.db.transaction((tx) => {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                       "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", [], ()=>{}, errorHandler);
@@ -313,7 +322,7 @@ recordBook.onclick = (element) => {
           return;
         } else {
           chrome.runtime.sendMessage({
-            msg: "something_completed", 
+            msg: "something_completed",
             data: {
                 name: "league_record_book",
                 html: html
@@ -342,7 +351,7 @@ allTimeWins.onclick = (element) => {
               return;
             } else {
               chrome.runtime.sendMessage({
-                msg: "something_completed", 
+                msg: "something_completed",
                 data: {
                     name: "league_all_time_wins",
                     html: htmlBlock

@@ -29,11 +29,6 @@ let lastDate = '';
 let QBG = null, QBS= null, RBG = null, RBS = null, WRG = null, WRS = null;
 let TEG = null, TES = null, DSTG = null, DSTS = null, KG = null, KS = null;
 
-const errorHandler = (transaction, error) => {
-  alert("Error processing SQL: "+ error.message);
-  return true;
-}
-
 //get initial options - league id and name, lastSync and former saved options
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
   leagueDBNames = (data.leagueDBNames) ? data.leagueDBNames : [];
@@ -42,7 +37,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
   chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, (tabs) => {
     chrome.tabs.executeScript(
       tabs[0].id,
-      {code: 'var s = document.createElement("script"); var hiddenDiv = document.createElement("div"); hiddenDiv.setAttribute("hidden","hidden"); hiddenDiv.setAttribute("id", "hidden-com-div"); s.type = "text/javascript"; var code = "document.getElementById(\'hidden-com-div\').innerHTML = JSON.stringify(com.espn.games);"; s.appendChild(document.createTextNode(code)); document.body.appendChild(hiddenDiv); document.body.appendChild(s); document.getElementById("hidden-com-div").innerHTML'},
+      {code: 'var oldHiddenDiv = document.getElementById("hidden-com-div"); if(oldHiddenDiv){oldHiddenDiv.parentNode.removeChild(oldHiddenDiv);} var oldHiddenScript = document.getElementById("hidden-com-script"); if(oldHiddenScript){oldHiddenScript.parentNode.removeChild(oldHiddenScript);} var s = document.createElement("script"); var hiddenDiv = document.createElement("div"); hiddenDiv.setAttribute("hidden","hidden"); hiddenDiv.setAttribute("id", "hidden-com-div"); s.setAttribute("id","hidden-com-script"); s.type = "text/javascript"; var code = "document.getElementById(\'hidden-com-div\').innerHTML = JSON.stringify(com.espn.games);"; s.appendChild(document.createTextNode(code)); document.body.appendChild(hiddenDiv); document.body.appendChild(s); document.getElementById("hidden-com-div").innerHTML'},
       (leagueObject) => {
         leagueInfo = JSON.parse(leagueObject[0]);
         leagueId = leagueInfo.leagueId;
@@ -117,7 +112,11 @@ let parseTeams = (teamArray) => {
 
 isValidPostSeasonMatchup = (periodId, index, champWeek) => {
   const matchupsTillFinal = champWeek - periodId;
-  return index < Math.pow(2, matchupsTillFinal);
+  if(leagueLocalStorage.trackLosers) {
+    return true;
+  } else if(leagueLocalStorage.track3rdPlaceGame && matchupsTillFinal === 0) {
+    return index < 2;
+  } return index < Math.pow(2, matchupsTillFinal);
 }
 
 const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup) => {
@@ -150,6 +149,9 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
     let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
     let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
     let awayOutcome = 3;
+    let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
+    let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
+    let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index > Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
     if(matchup.outcome === 1) {
       awayOutcome = 2;
     } else if(matchup.outcome === 2) {
@@ -157,17 +159,18 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
     }
     // home team
     leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore)], ()=>{}, errorHandler);
+      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+          [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore), isThirdPlaceGame, isChampionship, isLosersBacketGame], ()=>{}, errorHandler);
      });
     // away team
     leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff) VALUES (?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus))],
+      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+          [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
         (tx, tr) => {
           loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
           if(lastDate === (pointerYear + '-' + periodId)) {
             setTimeout(() => {
+              //TODO : have handler only show once if users save third place or losers bracket games
               alert("Database Update Complete")
               enableButtons();
             })
@@ -264,7 +267,7 @@ updateDatabase.onclick = (element) => {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                       "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", [], ()=>{}, errorHandler);
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss BOOLEAN, score FLOAT, matchupTotal Float, pointDiff FLOAT)", [], ()=>{}, errorHandler);
+                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss INTEGER, score FLOAT, matchupTotal Float, pointDiff FLOAT, isThirdPlaceGame BOOLEAN, isChampionship BOOLEAN, isLosersBacketGame BOOLEAN)", [], ()=>{}, errorHandler);
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                       "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", [], () => { createTables() }, errorHandler);
       });
@@ -363,7 +366,7 @@ allTimeWins.onclick = (element) => {
           getSackos(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (sackos) => {
             getAllManagersPlayoffAppearences(leagueDatabase.webdb.db, managerList, yearList, leagueSettingsMap, (playoffApps) => {
               const mergedRecords = mergeDataIntoRecords(records, sackos, champions, playoffApps, points);
-              getAllTimeLeaderBoard(mergedRecords, onReady);
+              getAllTimeLeaderBoard(mergedRecords, leagueSettingsMap[yearList[0]], onReady);
             });
           })
         })

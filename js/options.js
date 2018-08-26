@@ -78,8 +78,7 @@ const updateOptionsForLeague = () => {
 
   leagueDatabase.webdb.open();
   chrome.storage.sync.get([currentLeague], (response) => {
-    console.log(response);
-    let data = response[currentLeague];
+    const data = response[currentLeague];
     lastSync = data.lastSync;
     QBG.value = (data.QBG) ? data.QBG.score : null;
     QBS.value = (data.QBS) ? data.QBS.score : null;
@@ -114,8 +113,8 @@ const updateOptionsForLeague = () => {
     lastPlaceNameInput.value = (data.lastPlaceName) ? data.lastPlaceName : null;
 
     //get options from database
-    let query = 'SELECT DISTINCT year FROM matchups';
-    let query2 = 'SELECT DISTINCT manager FROM matchups';
+    const query = 'SELECT DISTINCT year FROM matchups';
+    const query2 = 'SELECT DISTINCT manager FROM matchups';
     leagueDatabase.webdb.db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -138,7 +137,7 @@ const updateOptionsForLeague = () => {
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
   leagueDBNames = result.leagueDBNames;
   leagueNameMap = result.leagueNameMap;
-  let options = [];
+  const options = [];
   for(var i = 0; i < leagueDBNames.length; i++) {
     let selected = (i === 0) ? 'selected' : '';
     options.push(`<option value='${leagueDBNames[i]}' ${selected}>${leagueNameMap[leagueDBNames[i]]}</option>`)
@@ -154,13 +153,12 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
 });
 
 const populateLastPlaceSelection = (years, sackoMap, owners) => {
-  console.log(years);
   sackoTable.innerHTML = "";
   years.forEach((year) => {
-    let row = document.createElement('tr');
-    let yearCell = document.createElement('td');
+    const row = document.createElement('tr');
+    const yearCell = document.createElement('td');
     yearCell.innerHTML = year;
-    let managerCell = document.createElement('td');
+    const managerCell = document.createElement('td');
     managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
     row.appendChild(yearCell);
     row.appendChild(managerCell);

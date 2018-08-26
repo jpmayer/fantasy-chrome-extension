@@ -77,6 +77,12 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
                   }
                   leagueDatabase.webdb.open();
 
+                  leagueDatabase.webdb.db.transaction((tx) => {
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                                  "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", [],
+                                  () => {}, errorHandler);
+                  });
+
                   if(leagueDBNames.indexOf(dbName) === -1) {
                     if(leagueDBNames.length === 0) {
                       leagueDBNames = [dbName];
@@ -355,9 +361,8 @@ updateDatabase.onclick = (element) => {
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                       "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", [], ()=>{}, errorHandler);
         tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss INTEGER, score FLOAT, matchupTotal Float, pointDiff FLOAT, isThirdPlaceGame BOOLEAN, isChampionship BOOLEAN, isLosersBacketGame BOOLEAN)", [], ()=>{}, errorHandler);
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", [], () => { createTables() }, errorHandler);
+                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss INTEGER, score FLOAT, matchupTotal Float, pointDiff FLOAT, isThirdPlaceGame BOOLEAN, isChampionship BOOLEAN, isLosersBacketGame BOOLEAN)", [],
+                      () => { createTables(); }, errorHandler);
       });
     } else {
       createTables();
@@ -371,9 +376,9 @@ deleteDatabase.onclick = (element) => {
   if(shouldDelete) {
     try {
       leagueDatabase.webdb.db.transaction((tx) => {
-        tx.executeSql("DROP TABLE rankings",[],() => {
-          tx.executeSql("DROP TABLE matchups",[],() => {
-            tx.executeSql("DROP TABLE history",[],() => {
+        tx.executeSql("DROP TABLE IF EXISTS rankings",[],() => {
+          tx.executeSql("DROP TABLE IF EXISTS matchups",[],() => {
+            tx.executeSql("DROP TABLE IF EXISTS history",[],() => {
               leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
               delete leagueNameMap[leagueName];
               let saveState = {'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap};

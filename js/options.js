@@ -1,32 +1,55 @@
 let currentLeague = null;
+let leagueDBNames = null;
+let leagueNameMap = null;
 const container = document.getElementById('container-body');
 const leagueSelector = document.getElementById('league-selector');
 const categories = document.getElementsByClassName('category');
-let saveButton = document.getElementById('save');
-let QBG = document.getElementById('QBG');
-let QBGName = document.getElementById('QBG-Name');
-let QBS= document.getElementById('QBS');
-let QBSName= document.getElementById('QBS-Name');
-let RBG = document.getElementById('RBG');
-let RBGName = document.getElementById('RBG-Name');
-let RBS = document.getElementById('RBS');
-let RBSName = document.getElementById('RBS-Name');
-let WRG = document.getElementById('WRG');
-let WRGName = document.getElementById('WRG-Name');
-let WRS = document.getElementById('WRS');
-let WRSName = document.getElementById('WRS-Name');
-let TEG = document.getElementById('TEG');
-let TEGName = document.getElementById('TEG-Name');
-let TES = document.getElementById('TES');
-let TESName = document.getElementById('TES-Name');
-let DSTG = document.getElementById('DSTG');
-let DSTGName = document.getElementById('DSTG-Name');
-let DSTS = document.getElementById('DSTS');
-let DSTSName = document.getElementById('DSTS-Name');
-let KG = document.getElementById('KG');
-let KGName = document.getElementById('KG-Name');
-let KS = document.getElementById('KS');
-let KSName = document.getElementById('KS-Name');
+const leagueDatabase = {};
+leagueDatabase.webdb = {};
+leagueDatabase.webdb.db = null;
+const saveButton = document.getElementById('save');
+const QBG = document.getElementById('QBG');
+const QBGName = document.getElementById('QBG-Name');
+const QBS= document.getElementById('QBS');
+const QBSName= document.getElementById('QBS-Name');
+const RBG = document.getElementById('RBG');
+const RBGName = document.getElementById('RBG-Name');
+const RBS = document.getElementById('RBS');
+const RBSName = document.getElementById('RBS-Name');
+const WRG = document.getElementById('WRG');
+const WRGName = document.getElementById('WRG-Name');
+const WRS = document.getElementById('WRS');
+const WRSName = document.getElementById('WRS-Name');
+const TEG = document.getElementById('TEG');
+const TEGName = document.getElementById('TEG-Name');
+const TES = document.getElementById('TES');
+const TESName = document.getElementById('TES-Name');
+const DSTG = document.getElementById('DSTG');
+const DSTGName = document.getElementById('DSTG-Name');
+const DSTS = document.getElementById('DSTS');
+const DSTSName = document.getElementById('DSTS-Name');
+const KG = document.getElementById('KG');
+const KGName = document.getElementById('KG-Name');
+const KS = document.getElementById('KS');
+const KSName = document.getElementById('KS-Name');
+
+const showLoserCheckbox = document.getElementById('losers-show');
+const show3rdPlaceCheckbox = document.getElementById('3rd-show');
+const hideAverageLineCheckbox = document.getElementById('acuna-show');
+const averageLineNameInput = document.getElementById('acuna-name');
+const lastPlaceNameInput = document.getElementById('sacko-name');
+
+const sackoTable = document.getElementById('sacko-override');
+
+const errorHandler = (transaction, error) => {
+  alert("Error processing SQL: "+ error.message);
+  return true;
+}
+
+let yearArray = [];
+let managerArray = [];
+let sackoMap = null;
+let lastSync = null;
 
 for(var h = 0; h < categories.length; h++) {
   ((index) => {
@@ -41,59 +64,141 @@ for(var h = 0; h < categories.length; h++) {
   })(h);
 }
 
+leagueSelector.addEventListener('change', (event) => {
+  currentLeague = event.target.value;
+  updateOptionsForLeague();
+});
+
+const updateOptionsForLeague = () => {
+  yearArray = []; managerArray = [];
+  leagueDatabase.webdb.open = () => {
+    var dbSize = 5 * 1024 * 1024; // 5MB
+    leagueDatabase.webdb.db = openDatabase((currentLeague), "1", "League Database", dbSize);
+  }
+
+  leagueDatabase.webdb.open();
+  chrome.storage.sync.get([currentLeague], (response) => {
+    console.log(response);
+    let data = response[currentLeague];
+    lastSync = data.lastSync;
+    QBG.value = (data.QBG) ? data.QBG.score : null;
+    QBS.value = (data.QBS) ? data.QBS.score : null;
+    RBG.value = (data.RBG) ? data.RBG.score : null;
+    RBS.value = (data.RBS) ? data.RBS.score : null;
+    WRG.value = (data.WRG) ? data.WRG.score : null;
+    WRS.value = (data.WRS) ? data.WRS.score : null;
+    TEG.value = (data.TEG) ? data.TEG.score : null;
+    TES.value = (data.TES) ? data.TES.score : null;
+    DSTG.value = (data.DSTG) ? data.DSTG.score : null;
+    DSTS.value = (data.DSTS) ? data.DSTS.score : null;
+    KG.value = (data.KG) ? data.KG.score : null;
+    KS.value = (data.KS) ? data.KS.score : null;
+
+    QBGName.value = (data.QBG) ? data.QBG.name : null;
+    QBSName.value = (data.QBS) ? data.QBS.name : null;
+    RBGName.value = (data.RBG) ? data.RBG.name : null;
+    RBSName.value = (data.RBS) ? data.RBS.name : null;
+    WRGName.value = (data.WRG) ? data.WRG.name : null;
+    WRSName.value = (data.WRS) ? data.WRS.name : null;
+    TEGName.value = (data.TEG) ? data.TEG.name : null;
+    TESName.value = (data.TES) ? data.TES.name : null;
+    DSTGName.value = (data.DSTG) ? data.DSTG.name : null;
+    DSTSName.value = (data.DSTS) ? data.DSTS.name : null;
+    KGName.value = (data.KG) ? data.KG.name : null;
+    KSName.value = (data.KS) ? data.KS.name : null;
+
+    showLoserCheckbox.checked = (data.trackLosers) ? data.trackLosers : false;
+    show3rdPlaceCheckbox.checked = (data.track3rdPlaceGame) ? data.track3rdPlaceGame : false;
+    hideAverageLineCheckbox.checked = (data.hideAverageLine) ? data.hideAverageLine : null;
+    averageLineNameInput.value = (data.averageLineName) ? data.averageLineName : null;
+    lastPlaceNameInput.value = (data.lastPlaceName) ? data.lastPlaceName : null;
+
+    //get options from database
+    let query = 'SELECT DISTINCT year FROM matchups';
+    let query2 = 'SELECT DISTINCT manager FROM matchups';
+    leagueDatabase.webdb.db.transaction((tx) => {
+      tx.executeSql(query, [],
+        (tx, rs) => {
+          for(var i = 0; i < rs.rows.length; i++) {
+            yearArray.push(rs.rows[i].year);
+          }
+          tx.executeSql(query2, [],
+            (tx, rs2) => {
+              for(var m = 0; m < rs2.rows.length; m++) {
+                managerArray.push(rs2.rows[m].manager);
+              }
+              sackoMap = (data.sackoMap) ? data.sackoMap : {};
+              populateLastPlaceSelection(yearArray, sackoMap, managerArray);
+            }, errorHandler);
+        }, errorHandler);
+      });
+  });
+}
+
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
-  console.log(result);
-  currentLeague = (result.leagueDBNames.length > 0) ? result.leagueDBNames[0] : null;
+  leagueDBNames = result.leagueDBNames;
+  leagueNameMap = result.leagueNameMap;
   let options = [];
+  for(var i = 0; i < leagueDBNames.length; i++) {
+    let selected = (i === 0) ? 'selected' : '';
+    options.push(`<option value='${leagueDBNames[i]}' ${selected}>${leagueNameMap[leagueDBNames[i]]}</option>`)
+  }
+  leagueSelector.innerHTML = options;
+  currentLeague = (leagueDBNames.length > 0) ? leagueDBNames[0] : null;
   if(currentLeague) {
     //leagueTitle.innerHTML = result.leagueNameMap[currentLeague];
-    for(var i = 0; i < result.leagueDBNames.length; i++) {
-      let selected = (i === 0) ? 'selected' : '';
-      options.push(`<option key='${result.leagueDBNames[i]}' ${selected}>${result.leagueNameMap[result.leagueDBNames[i]]}</option>`)
-    }
-    leagueSelector.innerHTML = options;
-    chrome.storage.sync.get([currentLeague], (data) => {
-      console.log(data);
-      /*
-      QBG.value = data.QBG.score;
-      QBS.value = data.QBS.score;
-      RBG.value = data.RBG.score;
-      RBS.value = data.RBS.score;
-      WRG.value = data.WRG.score;
-      WRS.value = data.WRS.score;
-      TEG.value = data.TEG.score;
-      TES.value = data.TES.score;
-      DSTG.value = data.DSTG.score;
-      DSTS.value = data.DSTS.score;
-      KG.value = data.KG.score;
-      KS.value = data.KS.score;
-
-      QBGName.value = data.QBG.name;
-      QBSName.value = data.QBS.name;
-      RBGName.value = data.RBG.name;
-      RBSName.value = data.RBS.name;
-      WRGName.value = data.WRG.name;
-      WRSName.value = data.WRS.name;
-      TEGName.value = data.TEG.name;
-      TESName.value = data.TES.name;
-      DSTGName.value = data.DSTG.name;
-      DSTSName.value = data.DSTS.name;
-      KGName.value = data.KG.name;
-      KSName.value = data.KS.name;
-      */
-    });
+    updateOptionsForLeague();
   } else {
     container.innerHTML = "<div class='container' style='padding:25px; text-align:center;'>Upload league database before adding league options</div>";
   }
 });
 
+const populateLastPlaceSelection = (years, sackoMap, owners) => {
+  console.log(years);
+  sackoTable.innerHTML = "";
+  years.forEach((year) => {
+    let row = document.createElement('tr');
+    let yearCell = document.createElement('td');
+    yearCell.innerHTML = year;
+    let managerCell = document.createElement('td');
+    managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
+    row.appendChild(yearCell);
+    row.appendChild(managerCell);
+    sackoTable.appendChild(row);
+  })
+}
 
-saveButton.onclick = function(element) {
-  alert("saved");
+const generateManagerDropdown = (managers, selectedManager, year) => {
+  let selectManager = document.createElement('select');
+  selectManager.setAttribute('data-year', year);
+  selectManager.addEventListener('change', (event, b) => {
+    sackoMap[event.target.getAttribute('data-year')] = event.target.value;
+  });
+  let noneOption = document.createElement('option');
+  noneOption.setAttribute('value', 'none');
+  noneOption.innerHTML = '';
+  selectManager.appendChild(noneOption);
+
+  managers.forEach((manager) => {
+    let managerOption = document.createElement('option');
+    managerOption.setAttribute('value', manager);
+    managerOption.innerHTML = manager;
+    if(manager === selectedManager) {
+      managerOption.setAttribute('selected', 'selected');
+    }
+    selectManager.appendChild(managerOption);
+  })
+  return selectManager;
+}
+
+
+saveButton.onclick = (element) => {
   const savedObject = {};
   savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
     WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
-    DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value}};
-  chrome.storage.sync.set(savedObject, function() {
+    DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value},
+    lastSync: lastSync, sackoMap: sackoMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value, hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked};
+  chrome.storage.sync.set(savedObject, () => {
+    alert("saved");
   });
 };

@@ -319,7 +319,6 @@ recordBook.onclick = (element) => {
                 html: html
             }
         });
-          chrome.storage.local.set({'payload': html});
         }
       }
     );
@@ -349,7 +348,6 @@ allTimeWins.onclick = (element) => {
                     html: htmlBlock
                 }
             });
-              chrome.storage.local.set({'payload': htmlBlock});
             }
           }
       );

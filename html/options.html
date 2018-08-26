@@ -21,8 +21,7 @@
         color: black;
       }
       .container-row {
-        padding: 0px;
-        max-height: 0px;
+        padding: 5px;
         overflow: hidden;
         transition: max-height .25s linear;
       }
@@ -56,9 +55,9 @@
         user-select: none;
         margin-bottom: 1px;
       }
-      .category.active > .container-row {
-        max-height: 300px;
-        padding: 5px;
+      .category.inactive > .container-row {
+        max-height: 0px !important;
+        padding: 0px;
       }
       .category.active > .sub-header {
         margin-bottom: 0px;
@@ -81,10 +80,10 @@
         display: inline-block;
       }
       .category .accordian-icon::before {
-        content: "+";
-      }
-      .category.active .accordian-icon::before {
         content: "-";
+      }
+      .category.inactive .accordian-icon::before {
+        content: "+";
       }
       table#sacko-override tr td select{
         width: 100%;
@@ -121,11 +120,35 @@
           <div class="sub-header" style="text-align: right;">
             League: <select id="league-selector"></select>
           </div>
-          <div class="container category active">
+          <div class="container category">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Manager Options
+            </div>
+            <div class="container-row manager-options" id="manager-options">
+              <table id="manager-override"><tbody><thead><tr><th style="text-align:right;">Manager</th><th>Alias</th></tr></thead></tbody></table>
+            </div>
+          </div>
+          <div class="container category inactive">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Leader Board Options
+            </div>
+            <div class="container-row leader-board-options" id="leader-board-options">
+              <table>
+                <tr><td>Track Losers' Bracket Games: </td><td><input type="checkbox" id="losers-show"></td></tr>
+                <tr><td>Track 3rd Place Game: </td><td><input type="checkbox" id="3rd-show"></td></tr>
+                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
+                <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
+                <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
+                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
+              </table>
+            </div>
+            </div>
+          </div>
+          <div class="container category inactive">
             <div class="sub-header">
               <span class="accordian-icon" /> Record Book Options
             </div>
-            <div class="container-row">
+            <div class="container-row" id="record-book-options" style="max-height:305px;">
               <table>
                 <tr>
                   <th class="label-header">Position Record</th>
@@ -145,30 +168,6 @@
                 <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
                 <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
               </table>
-            </div>
-          </div>
-          <div class="container category">
-            <div class="sub-header">
-              <span class="accordian-icon" /> Manager Options
-            </div>
-            <div class="container-row">
-              Some form here
-            </div>
-          </div>
-          <div class="container category">
-            <div class="sub-header">
-              <span class="accordian-icon" /> Leader Board Options
-            </div>
-            <div class="container-row leader-board-options">
-              <table>
-                <tr><td>Track Losers' Bracket Games: </td><td><input type="checkbox" id="losers-show"></td></tr>
-                <tr><td>Track 3rd Place Game: </td><td><input type="checkbox" id="3rd-show"></td></tr>
-                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
-                <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
-                <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
-                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
-              </table>
-            </div>
             </div>
           </div>
           <div class="button-container">

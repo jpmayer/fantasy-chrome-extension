@@ -39,6 +39,12 @@ const hideAverageLineCheckbox = document.getElementById('acuna-show');
 const averageLineNameInput = document.getElementById('acuna-name');
 const lastPlaceNameInput = document.getElementById('sacko-name');
 
+const leaderBoardOptionsDiv = document.getElementById('leader-board-options');
+const managerOptionsDiv = document.getElementById('manager-options');
+const recordBoardOptionsDiv = document.getElementById('record-board-options');
+
+const managerTable = document.getElementById('manager-override');
+const managerTableBody = managerTable.getElementsByTagName( 'tbody' )[0];
 const sackoTable = document.getElementById('sacko-override');
 
 const errorHandler = (transaction, error) => {
@@ -49,16 +55,18 @@ const errorHandler = (transaction, error) => {
 let yearArray = [];
 let managerArray = [];
 let sackoMap = null;
+let managerMap = null;
 let lastSync = null;
 
 for(var h = 0; h < categories.length; h++) {
   ((index) => {
     categories[index].addEventListener("click", () => {
-      if(categories[index].className.indexOf('active') === -1) {
+      if(categories[index].className.indexOf('inactive') > -1) {
         for(var j = 0; j < categories.length; j++) {
-          categories[j].classList.remove('active');
+          categories[j].classList.remove('inactive');
+          categories[j].classList.add('inactive');
         }
-        categories[index].classList.add('active');
+        categories[index].classList.remove('inactive');
       }
     });
   })(h);
@@ -127,6 +135,8 @@ const updateOptionsForLeague = () => {
                 managerArray.push(rs2.rows[m].manager);
               }
               sackoMap = (data.sackoMap) ? data.sackoMap : {};
+              managerMap = (data.managerMap) ? data.managerMap : {};
+              populateManagerAlias(managerArray);
               populateLastPlaceSelection(yearArray, sackoMap, managerArray);
             }, errorHandler);
         }, errorHandler);
@@ -152,6 +162,30 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
   }
 });
 
+const populateManagerAlias = (managers) => {
+  managerTableBody.innerHTML = "";
+  managers.forEach((manager) => {
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.setAttribute('style','width: 33%;');
+    nameCell.innerHTML = manager;
+    const aliasCell = document.createElement('td');
+    const aliasInput = document.createElement('input');
+    aliasInput.setAttribute('type','text');
+    aliasInput.setAttribute('style','margin-left: 5%; width: 90%;');
+    let managerValue = (managerMap[manager]) ? managerMap[manager] : '';
+    aliasInput.setAttribute('value', managerValue);
+    aliasInput.addEventListener('change', (event) => {
+      managerMap[manager] = event.target.value;
+    });
+    aliasCell.appendChild(aliasInput);
+    row.appendChild(nameCell);
+    row.appendChild(aliasCell);
+    managerTableBody.appendChild(row);
+  });
+  managerOptionsDiv.style['max-height'] = window.getComputedStyle(managerOptionsDiv).getPropertyValue('height');
+}
+
 const populateLastPlaceSelection = (years, sackoMap, owners) => {
   sackoTable.innerHTML = "";
   years.forEach((year) => {
@@ -164,6 +198,9 @@ const populateLastPlaceSelection = (years, sackoMap, owners) => {
     row.appendChild(managerCell);
     sackoTable.appendChild(row);
   })
+  let tableHeight = window.getComputedStyle(sackoTable).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 129;
+  leaderBoardOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
 const generateManagerDropdown = (managers, selectedManager, year) => {
@@ -195,7 +232,7 @@ saveButton.onclick = (element) => {
   savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
     WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
     DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value},
-    lastSync: lastSync, sackoMap: sackoMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value, hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked};
+    lastSync: lastSync, sackoMap: sackoMap, managerMap: managerMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value, hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked};
   chrome.storage.sync.set(savedObject, () => {
     alert("saved");
   });

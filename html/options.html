@@ -86,6 +86,28 @@
       .category.active .accordian-icon::before {
         content: "-";
       }
+      table#sacko-override tr td select{
+        width: 100%;
+      }
+      table#sacko-override tr td {
+        text-align: center;
+      }
+      .leader-board-options td input {
+        text-align: center;
+        width: 90%;
+        margin-left: 5%;
+      }
+      .leader-board-options td input[type="checkbox"] {
+        text-align: left;
+        text-indent: 20px;
+        line-height: 12px;
+      }
+      .leader-board-options td input[type="checkbox"]::before {
+        content: 'DISABLED';
+      }
+      .leader-board-options td input[type="checkbox"]:checked::before {
+        content: 'ENABLED';
+      }
     </style>
   </head>
   <body>
@@ -137,14 +159,14 @@
             <div class="sub-header">
               <span class="accordian-icon" /> Leader Board Options
             </div>
-            <div class="container-row">
+            <div class="container-row leader-board-options">
               <table>
-                <tr><td style="width:170px;">Last Place Alias: </td><td><input type="text" id="sacko-name" placeholder="Sacko" /></td></tr>
-                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"></table></td></tr>
-                <tr><td>Average Line Alias: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
-                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
                 <tr><td>Track Losers' Bracket Games: </td><td><input type="checkbox" id="losers-show"></td></tr>
                 <tr><td>Track 3rd Place Game: </td><td><input type="checkbox" id="3rd-show"></td></tr>
+                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
+                <tr><td>Average Line Alias: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
+                <tr><td style="width:200px;">Last Place Alias: </td><td><input type="text" id="sacko-name" placeholder="Sacko" /></td></tr>
+                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
               </table>
             </div>
             </div>

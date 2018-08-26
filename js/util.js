@@ -1,11 +1,22 @@
+const getLeagueSettings = (yearList, leagueId) => {
+  const leagueSettingsMap = {};
+  yearList.forEach((year) => {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${year}&matchupPeriodId=1`, false);
+    xhr.send();
+    leagueSettingsMap[year] = JSON.parse(xhr.responseText).leaguesettings;
+  });
+  return leagueSettingsMap;
+}
+
 /*
 * Retrieves the sacko holder for any given year
 */
-const getSacko = (db, year, callback) => {
-  let query = "SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week < 14 ORDER BY manager ASC, year ASC, week ASC";
-  var db = html5rocks.webdb.db;
+const getSacko = (db, year, leagueSettings, callback) => {
+  let query = "SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week <= ? ORDER BY manager ASC, year ASC, week ASC";
+  var db = leagueDatabase.webdb.db;
   db.transaction((tx) => {
-    tx.executeSql(query, [year],
+    tx.executeSql(query, [year, leagueSettings.finalRegularSeasonMatchupPeriodId],
       (tx, rs) => {
         const ownerMap = {};
         for(var i = 0; i < rs.rows.length; i++) {
@@ -42,7 +53,7 @@ const getSacko = (db, year, callback) => {
         }
         for (var owner in ownerMap) {
           if (ownerMap.hasOwnProperty(owner)) {
-            if(ownerMap[owner].gamesPlayed === 13) {
+            if(ownerMap[owner].gamesPlayed === leagueSettings.finalRegularSeasonMatchupPeriodId) {
               if(ownerMap[owner].count < sacko.count) {
                 sacko = ownerMap[owner];
               } else if (ownerMap[owner].count === sacko.count) {
@@ -64,12 +75,11 @@ const getSacko = (db, year, callback) => {
 /*
 * Return League Champion for Given Year
 */
-const getChampion = (db, year, callback) => {
-  let query = 'SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week = 16 AND winLoss = 1 ORDER BY manager ASC, year ASC, week ASC';
+const getChampion = (db, year, leagueSettings, callback) => {
+  let query = 'SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week = ? AND winLoss = 1 ORDER BY manager ASC, year ASC, week ASC';
   db.transaction((tx) => {
-    tx.executeSql(query, [year],
+    tx.executeSql(query, [year, leagueSettings.finalMatchupPeriodId],
       (tx, rs) => {
-        console.log(rs);
         if(rs.rows.length === 0) {
           callback(null);
         } else {
@@ -80,14 +90,14 @@ const getChampion = (db, year, callback) => {
 }
 
 /*
-* Return the Number of Playoff Appearences for a given Manager
+*
 */
-const getPlayoffAppearences = (db, manager, callback) => {
-  let query = 'SELECT DISTINCT manager, year FROM matchups WHERE manager = ? AND week > 13 ORDER BY year ASC, week ASC';
+const didAppearInPlayoffs = (db, manager, year, leagueSettings, callback) => {
+  let query = 'SELECT DISTINCT manager, year FROM matchups WHERE manager = ? AND year = ? AND week > ? ORDER BY year ASC, week ASC';
   db.transaction((tx) => {
-    tx.executeSql(query, [manager],
+    tx.executeSql(query, [manager, year, leagueSettings.finalRegularSeasonMatchupPeriodId],
       (tx, rs) => {
-        callback(rs.rows.length);
+        callback((rs.rows.length > 0));
       })
   })
 }
@@ -187,10 +197,10 @@ const getRecords = (database, managerList, callback) => {
   });
 }
 
-const getSackos = (database, yearsActive, callback) => {
+const getSackos = (database, yearsActive, leagueSettingsMap, callback) => {
   const sackos = [];
   yearsActive.forEach((year, index) => {
-    getSacko(database, year, (sacko) => {
+    getSacko(database, year, leagueSettingsMap[year], (sacko) => {
       sackos.push(sacko);
       if(index === yearsActive.length - 1) {
         callback(sackos);
@@ -199,10 +209,10 @@ const getSackos = (database, yearsActive, callback) => {
   });
 }
 
-const getChampionships = (database, yearsActive, callback) => {
+const getChampionships = (database, yearsActive, leagueSettingsMap, callback) => {
   const champions = [];
   yearsActive.forEach((year, index) => {
-    getChampion(database, year, (champ) => {
+    getChampion(database, year, leagueSettingsMap[year], (champ) => {
       champions.push(champ);
       if(index === yearsActive.length - 1) {
         callback(champions);
@@ -211,14 +221,17 @@ const getChampionships = (database, yearsActive, callback) => {
   });
 }
 
-const getAllManagersPlayoffAppearences = (database, managerList, callback) => {
+const getAllManagersPlayoffAppearences = (database, managerList, yearsActive, leagueSettingsMap, callback) => {
   const playoffApps = {};
   managerList.forEach((manager, index) => {
-    getPlayoffAppearences(database, manager, (numPlayoffApp) => {
-      playoffApps[manager] = numPlayoffApp;
-      if(index === managerList.length - 1) {
-        callback(playoffApps);
-      }
+    playoffApps[manager] = 0;
+    yearsActive.forEach((year, yearIndex) => {
+      didAppearInPlayoffs(database, manager, year, leagueSettingsMap[year], (yearPlayoffCount) => { // 1 or 0
+        playoffApps[manager] = playoffApps[manager] + yearPlayoffCount;
+        if(index === managerList.length - 1 && yearIndex === yearsActive.length - 1) {
+          callback(playoffApps);
+        }
+      });
     });
   });
 }
@@ -227,7 +240,6 @@ const getAllManagersPoints = (database, managerList, callback) => {
   const pointsScored = {};
   managerList.forEach((manager, index) => {
     getPoints(database, manager, (pointsObject) => {
-      console.log(pointsObject);
       pointsScored[manager] = pointsObject;
       if(index === managerList.length - 1) {
         callback(pointsScored);

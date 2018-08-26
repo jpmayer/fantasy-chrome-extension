@@ -336,31 +336,23 @@ recordBook.onclick = (element) => {
 
 allTimeWins.onclick = (element) => {
   const onReady = (htmlBlock) => {
-    chrome.windows.create({
+    chrome.tabs.create({
       url: chrome.extension.getURL('../html/screenshot.html'),
       //tabId: tabs[0].id,
-      type: 'popup',
-      focused: true
+      active: false
     });
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.tabs.executeScript(
-          tabs[0].id,
-          {file: "screenshot.js"},
-          () => {
-            if (tabs[0].incognito) {
-              return;
-            } else {
-              chrome.runtime.sendMessage({
-                msg: "something_completed",
-                data: {
-                    name: "league_all_time_wins",
-                    html: htmlBlock
-                }
-            });
-            }
+    setTimeout(() => {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.runtime.sendMessage({
+          msg: "something_completed",
+          data: {
+            name: "league_all_time_wins",
+            html: htmlBlock
           }
-      );
-    });
+        });
+      });
+    }, 100);
+
   }
   getManagers(leagueDatabase.webdb.db, (managerList) => {
     getRecords(leagueDatabase.webdb.db, managerList, (records) => {

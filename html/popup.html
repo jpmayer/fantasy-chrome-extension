@@ -68,14 +68,31 @@
       }
       #power-rankings-table input[type="text"] {
         width: 90%;
+        padding-left: 8px;
+        border-radius: 4px;
+        border: 1px solid #aaa;
       }
       #power-rankings-table td:first-child {
         text-align: right;
       }
       #power-rankings-table select {
         width: 95%;
-        background: #f8f8f2;
+        background: #fafafa;
         margin-left: 5px;
+      }
+      input#power-ranking-title {
+        background: inherit;
+        border: none !important;
+        border-bottom: 1px solid #aaa !important;
+        margin-bottom: 5px;
+        text-align: center;
+        font-size: 12px;
+        width: 68% !important;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        display: block;
+        border-radius: 0px !important;
       }
     </style>
   </head>
@@ -118,7 +135,7 @@
         </div>
         <div class="container-row">
           <div class="align-right">
-            <table id="power-rankings-table"><tbody><thead><td>Place</td><td>Manager</td><td>Write Up</td></thead></tbody></table>
+            <table id="power-rankings-table"><tbody></tbody></table>
             <button id="power-rankings">Generate Weekly Ranking</button>
           </div>
         </div>
@@ -128,4 +145,5 @@
 </html>
 <script src="vendor/html2canvas.min.js"></script>
 <script src="../js/util.js"></script>
+<script src="../js/powerRankingUtil.js"></script>
 <script src="../js/popup.js"></script>

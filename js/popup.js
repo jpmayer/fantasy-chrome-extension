@@ -13,6 +13,7 @@ let leagueId = null;
 
 const recordBook = document.getElementById('record-book');
 const allTimeWins = document.getElementById('all-time-wins');
+const powerRankings = document.getElementById('power-rankings');
 const updateDatabase = document.getElementById('update-database');
 const deleteDatabase = document.getElementById('delete-database');
 const databaseInfo = document.getElementById('database-info');
@@ -61,7 +62,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
                 xhr.send();
                 selectedYearLeagueSettings = JSON.parse(xhr.responseText).leaguesettings;
 
-                powerRankingWeek.innerHTML = getPowerRankingWeekNameDisplay(currentWeek, selectedYearLeagueSettings.finalRegularSeasonMatchupPeriodId, selectedYearLeagueSettings.finalMatchupPeriodId);
+                powerRankingWeek.innerHTML = 'Matchup Week ' + currentWeek;
 
                 chrome.tabs.executeScript(
                   tabs[0].id,
@@ -79,7 +80,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
 
                   leagueDatabase.webdb.db.transaction((tx) => {
                     tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                                  "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT)", [],
+                                  "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT, title TEXT)", [],
                                   () => {}, errorHandler);
                   });
 
@@ -96,11 +97,8 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
                     if(data[dbName]) {
                       lastSync = data[dbName].lastSync;
                       leagueLocalStorage = data[dbName];
-
                       // generate power ranking table
-                      console.log(leagueLocalStorage);
-                      populatePowerRankings()
-
+                      populatePowerRankings();
                     }
                     //set last sync display time
                     syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
@@ -114,7 +112,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
   });
 });
 
-const generatePRManagerDropdown = (teamsObject, place, selectedTeam) => {
+const generatePRManagerDropdown = (place, selectedTeam) => {
   let selectManager = document.createElement('select');
   selectManager.setAttribute('place', place);
   selectManager.addEventListener('focus', (event) => {
@@ -126,6 +124,11 @@ const generatePRManagerDropdown = (teamsObject, place, selectedTeam) => {
       let select = selectElements[s];
       if(select.getAttribute('place') !== event.target.getAttribute('place')) {
         if(select.value === event.target.value) {
+          let descripElem = select.parentElement.nextSibling.getElementsByTagName('input')[0];
+          let newDescripElem = event.target.parentElement.nextSibling.getElementsByTagName('input')[0];
+          let oldText = descripElem.value;
+          descripElem.value = newDescripElem.value;
+          newDescripElem.value = oldText;
           select.value = previousManager;
           previousManager = event.target.value;
         }
@@ -138,7 +141,7 @@ const generatePRManagerDropdown = (teamsObject, place, selectedTeam) => {
       let managerOption = document.createElement('option');
       let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
       managerOption.setAttribute('value', oName);
-      managerOption.innerHTML = oName; // TODO show mapped name
+      managerOption.innerHTML = (leagueLocalStorage.managerMap[oName]) ? leagueLocalStorage.managerMap[oName] : oName;
       if(oName === selectedTeam) {
         managerOption.setAttribute('selected', 'selected');
       }
@@ -161,9 +164,25 @@ const rankingToPlaceString = (ranking) => {
   } return place;
 }
 
+const populatePowerRankingTableData = () => {
+
+}
+
 const populatePowerRankings = () => {
-  const query = "SELECT manager, ranking, week, year FROM rankings WHERE week = (SELECT max(week) FROM rankings WHERE year = ?)";
-  powerRankingTable.innerHTML = "";
+  const query = "SELECT manager, ranking, week, year, description, title FROM rankings WHERE week = (SELECT max(week) FROM rankings WHERE year = ?)";
+  const powerRankingTitleRow = document.createElement('tr');
+  //const powerRankingTitleCell = document.createElement('td');
+  const powerRankingTitleInputCell = document.createElement('td');
+  const powerRankingTitleInput = document.createElement('input');
+  powerRankingTitleInput.setAttribute('type', 'text');
+  powerRankingTitleInput.setAttribute('id', 'power-ranking-title');
+  powerRankingTitleInputCell.setAttribute('colspan', '3');
+  powerRankingTitleInput.setAttribute('placeholder', getPowerRankingWeekNameDisplay(currentWeek, selectedYearLeagueSettings.finalRegularSeasonMatchupPeriodId, selectedYearLeagueSettings.finalMatchupPeriodId) + ' ' + selectedYear);
+  //powerRankingTitleCell.innerHTML = 'Title:';
+  powerRankingTitleInputCell.appendChild(powerRankingTitleInput);
+  //powerRankingTitleRow.appendChild(powerRankingTitleCell);
+  powerRankingTitleRow.appendChild(powerRankingTitleInputCell);
+  powerRankingTable.innerHTML = powerRankingTitleRow.outerHTML;
   leagueDatabase.webdb.db.transaction((tx) => {
     tx.executeSql(query, [selectedYear],
       (tx, tr) => {
@@ -171,24 +190,43 @@ const populatePowerRankings = () => {
           for(var teamKey in selectedYearLeagueSettings.teams) {
             if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
               let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
-
-
               const row = document.createElement('tr');
               const rankingCell = document.createElement('td');
-              rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
               const managerCell = document.createElement('td');
               const descriptionCell = document.createElement('td');
-              managerCell.appendChild(generatePRManagerDropdown(selectedYearLeagueSettings.teams, teamKey, oName));
               const descriptionInput = document.createElement('input');
+              rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
+              managerCell.appendChild(generatePRManagerDropdown(teamKey, oName));
               descriptionInput.setAttribute('type','text');
+              descriptionInput.setAttribute('data-name',oName)
+              //descriptionInput.setAttribute('placeholder','...');
               descriptionCell.appendChild(descriptionInput);
               row.appendChild(rankingCell);
               row.appendChild(managerCell);
               row.appendChild(descriptionCell);
               powerRankingTable.appendChild(row);
-
-
             }
+          }
+        } else {
+          document.getElementById('power-ranking-title').value = tr.rows[0].title;
+          for(var i = 0; i < tr.rows.length; i++) {
+            let oName = tr.rows[i].manager;
+            const row = document.createElement('tr');
+            const rankingCell = document.createElement('td');
+            const managerCell = document.createElement('td');
+            const descriptionCell = document.createElement('td');
+            const descriptionInput = document.createElement('input');
+            rankingCell.innerHTML = rankingToPlaceString(tr.rows[i].ranking) + ": ";
+            managerCell.appendChild(generatePRManagerDropdown(tr.rows[i].ranking, oName));
+            descriptionInput.setAttribute('type','text');
+            descriptionInput.setAttribute('data-name',oName)
+            descriptionInput.value = tr.rows[i].description;
+            //descriptionInput.setAttribute('placeholder','...');
+            descriptionCell.appendChild(descriptionInput);
+            row.appendChild(rankingCell);
+            row.appendChild(managerCell);
+            row.appendChild(descriptionCell);
+            powerRankingTable.appendChild(row);
           }
         }
       }, errorHandler
@@ -281,8 +319,9 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
 
 createTables = () => {
   // update from last sync to present - if no last sync, then from firstYear
-  let yearPointer = (lastSync) ? lastSync.split("-")[0] : firstYear;
-  let weekPointer = (lastSync) ? lastSync.split("-")[1] : 1;
+  let yearPointer = (lastSync) ? parseInt(lastSync.split("-")[0], 10) : firstYear;
+  let weekPointer = (lastSync) ? parseInt(lastSync.split("-")[1], 10) : 1;
+  let initialRun = true;
 
   for(yearPointer; yearPointer <= currentYear; yearPointer++) {
     var xhr = new XMLHttpRequest();
@@ -307,7 +346,13 @@ createTables = () => {
     scheduleItems.some((week) => { //add setting for this - pull from league Settings
       weekPointer = week.matchupPeriodId;
       // check for current week
-      if(currentYear === yearPointer && currentWeek === weekPointer) {
+      if(initialRun) {
+        if(currentYear === yearPointer && currentWeek === weekPointer) {
+          alert("Database Update Complete")
+          enableButtons();
+          return true;
+        }
+      } else if(currentYear === yearPointer && currentWeek === weekPointer) {
         lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer - 1) + "-" + weekPointer;
         return true;
       }
@@ -466,5 +511,40 @@ allTimeWins.onclick = (element) => {
       })
     })
   });
+}
 
+const saveWeeklyPowerRanking = (clonedRanking, title, ranking, callback) => {
+  let row = clonedRanking.shift();
+  leagueDatabase.webdb.db.transaction((tx) => {
+    tx.executeSql("INSERT INTO rankings(manager, week, year, ranking, description, title) VALUES (?,?,?,?,?,?)",
+        [row.manager, currentWeek, selectedYear, row.place, row.description, title],
+        () => {
+          if(clonedRanking.length > 0) { saveWeeklyPowerRanking(clonedRanking, title, ranking, callback); }
+          else { callback(ranking); }
+        }, errorHandler);
+   });
+}
+
+const generatePowerRanking = (ranking) => {
+  console.log(ranking);
+}
+
+powerRankings.onclick = (element) => {
+  // first retrieve all the form data
+  const selectElements = document.getElementById('power-rankings-table').getElementsByTagName('select');
+  const powerRankingTitle = (document.getElementById('power-ranking-title').value !== '') ? document.getElementById('power-ranking-title').value : document.getElementById('power-ranking-title').placeholder;
+  const weeklyPowerRanking = [];
+  for(var i = 0; i < selectElements.length; i++) {
+    const selectElem = selectElements[i];
+    const descElem = selectElements[i].parentElement.nextSibling.getElementsByTagName('input')[0];
+    const place = i + 1;
+    weeklyPowerRanking.push({
+      manager: selectElem.value,
+      description: descElem.value,
+      place: place
+    });
+  }
+  //save to DB
+  let weeklyPowerRankingClone = JSON.parse(JSON.stringify(weeklyPowerRanking));
+  saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking);
 }

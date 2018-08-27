@@ -32,6 +32,7 @@ let selectedYear = null;
 let currentWeek = null;
 let lastDate = '';
 let previousManager = ''; // for power rankings manager dropdown
+let isOverridePowerRanking = false;
 
 //get initial options - league id and name, lastSync and former saved options
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
@@ -169,7 +170,7 @@ const populatePowerRankingTableData = () => {
 }
 
 const populatePowerRankings = () => {
-  const query = "SELECT manager, ranking, week, year, description, title FROM rankings WHERE week = (SELECT max(week) FROM rankings WHERE year = ?)";
+  const query = "SELECT manager, ranking, week, year, description, title FROM rankings WHERE week = ? AND year = ?";
   const powerRankingTitleRow = document.createElement('tr');
   //const powerRankingTitleCell = document.createElement('td');
   const powerRankingTitleInputCell = document.createElement('td');
@@ -184,7 +185,7 @@ const populatePowerRankings = () => {
   powerRankingTitleRow.appendChild(powerRankingTitleInputCell);
   powerRankingTable.innerHTML = powerRankingTitleRow.outerHTML;
   leagueDatabase.webdb.db.transaction((tx) => {
-    tx.executeSql(query, [selectedYear],
+    tx.executeSql(query, [currentWeek, selectedYear],
       (tx, tr) => {
         if(tr.rows.length === 0) {
           for(var teamKey in selectedYearLeagueSettings.teams) {
@@ -208,6 +209,7 @@ const populatePowerRankings = () => {
             }
           }
         } else {
+          isOverridePowerRanking = true;
           document.getElementById('power-ranking-title').value = tr.rows[0].title;
           for(var i = 0; i < tr.rows.length; i++) {
             let oName = tr.rows[i].manager;
@@ -251,7 +253,7 @@ isValidPostSeasonMatchup = (periodId, index, champWeek) => {
   } return index < Math.pow(2, matchupsTillFinal);
 }
 
-const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup) => {
+const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup, hasNextMatchup) => {
   let matchup = matchups.shift();
   if(!matchup.isBye && (periodId <= leagueSettings.finalRegularSeasonMatchupPeriodId || isValidPostSeasonMatchup(periodId, index, leagueSettings.finalMatchupPeriodId))) {
     if(currentYear - seasonId <= 1) {
@@ -300,7 +302,7 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
           [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
         (tx, tr) => {
           loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
-          if(lastDate === (pointerYear + '-' + periodId)) {
+          if(lastDate === (pointerYear + '-' + periodId) && !hasNextMatchup) {
             setTimeout(() => {
               //TODO : have handler only show once if users save third place or losers bracket games
               alert("Database Update Complete")
@@ -310,10 +312,10 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
         }, errorHandler);
      });
      if(matchups.length > 0) {
-       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup);
+       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
      }
   } else if(matchups.length > 0) {
-    addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup);
+    addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
   }
 }
 
@@ -356,7 +358,8 @@ createTables = () => {
         lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer - 1) + "-" + weekPointer;
         return true;
       }
-      addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, seasonId, ownerLookup);
+      initialRun = false;
+      addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, seasonId, ownerLookup, week.matchups.length > 1);
     });
   }
   yearPointer--;
@@ -525,26 +528,67 @@ const saveWeeklyPowerRanking = (clonedRanking, title, ranking, callback) => {
    });
 }
 
-const generatePowerRanking = (ranking) => {
-  console.log(ranking);
+const getTeamRecord = (teamMap, ownerName) => {
+  for(var teamKey in teamMap) {
+    if (teamMap.hasOwnProperty(teamKey)) {
+      let oName = teamMap[teamKey].owners[0].firstName.trim() + " " + teamMap[teamKey].owners[0].lastName.trim();
+      if(oName === ownerName) {
+        return {
+          wins: teamMap[teamKey].record.overallWins,
+          losses: teamMap[teamKey].record.overallLosses,
+          ties: teamMap[teamKey].record.overallTies
+        };
+      }
+    }
+  }
+}
+
+const generatePowerRanking = (rankingList) => {
+  isOverridePowerRanking = true;
+  console.log(rankingList);
+  rankingList.forEach((ranking) => {
+    let manager = ranking.manager;
+    let record = getTeamRecord(selectedYearLeagueSettings.teams, manager);
+    console.log(manager, record);
+    // Get trending stat
+  })
 }
 
 powerRankings.onclick = (element) => {
-  // first retrieve all the form data
-  const selectElements = document.getElementById('power-rankings-table').getElementsByTagName('select');
-  const powerRankingTitle = (document.getElementById('power-ranking-title').value !== '') ? document.getElementById('power-ranking-title').value : document.getElementById('power-ranking-title').placeholder;
-  const weeklyPowerRanking = [];
-  for(var i = 0; i < selectElements.length; i++) {
-    const selectElem = selectElements[i];
-    const descElem = selectElements[i].parentElement.nextSibling.getElementsByTagName('input')[0];
-    const place = i + 1;
-    weeklyPowerRanking.push({
-      manager: selectElem.value,
-      description: descElem.value,
-      place: place
-    });
+  if(isOverridePowerRanking) {
+    if(confirm('Power ranking for the week has already been saved, are you sure you want to overwrite it?')) {
+      console.log("on confirm");
+      powerRankingClickFunction(element);
+    }
+  } else {
+    powerRankingClickFunction(element);
   }
-  //save to DB
-  let weeklyPowerRankingClone = JSON.parse(JSON.stringify(weeklyPowerRanking));
-  saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking);
+}
+
+const powerRankingClickFunction = (element) => {
+  leagueDatabase.webdb.db.transaction((tx) => {
+    tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+      "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT, title TEXT)", [],
+      () => {
+        // first retrieve all the form data
+        const selectElements = document.getElementById('power-rankings-table').getElementsByTagName('select');
+        const powerRankingTitle = (document.getElementById('power-ranking-title').value !== '') ? document.getElementById('power-ranking-title').value : document.getElementById('power-ranking-title').placeholder;
+        const weeklyPowerRanking = [];
+        for(var i = 0; i < selectElements.length; i++) {
+          const selectElem = selectElements[i];
+          const descElem = selectElements[i].parentElement.nextSibling.getElementsByTagName('input')[0];
+          const place = i + 1;
+          weeklyPowerRanking.push({
+            manager: selectElem.value,
+            id: selectElem.getAttribute('data-id'),
+            description: descElem.value,
+            place: place
+          });
+        }
+        //save to DB
+        let weeklyPowerRankingClone = JSON.parse(JSON.stringify(weeklyPowerRanking));
+        // TODO: if same week already saved, need to delete old records - confirm modal?
+        saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking);
+      }, errorHandler);
+  });
 }

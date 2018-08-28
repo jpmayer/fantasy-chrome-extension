@@ -592,7 +592,7 @@ const powerRankingClickFunction = (element) => {
         chrome.runtime.sendMessage({
           msg: "something_completed",
           data: {
-            name: "league_all_time_wins",
+            name: "power_ranking",
             html: htmlBlock
           }
         });

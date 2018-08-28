@@ -9,6 +9,8 @@ leagueDatabase.webdb = {};
 leagueDatabase.webdb.db = null;
 const saveButton = document.getElementById('save');
 const resetButton = document.getElementById('reset');
+const scriptButton = document.getElementById('script');
+const customScript = document.getElementById('custom-script');
 const QBG = document.getElementById('QBG');
 const QBGName = document.getElementById('QBG-Name');
 const QBS= document.getElementById('QBS');
@@ -291,4 +293,16 @@ saveButton.onclick = (element) => {
 
 resetButton.onclick = (element) => {
   updateOptionsForLeague();
+}
+
+scriptButton.onclick = (element) => {
+  if(confirm('Are you sure you want to run this script?')) {
+    leagueDatabase.webdb.db.transaction((tx) => {
+      tx.executeSql(customScript.value, [],
+        (tx, rs) => {
+          customScript.value = "";
+          alert('Success');
+        });
+      }, errorHandler);
+  }
 }

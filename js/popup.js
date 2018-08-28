@@ -302,7 +302,7 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
           [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
         (tx, tr) => {
           loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
-          if(lastDate === (pointerYear + '-' + periodId) && !hasNextMatchup) {
+          if(isEndOfDatabaseUpdates(lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup)) {
             setTimeout(() => {
               //TODO : have handler only show once if users save third place or losers bracket games
               alert("Database Update Complete")
@@ -317,6 +317,27 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
   } else if(matchups.length > 0) {
     addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
   }
+}
+
+const isEndOfDatabaseUpdates = (lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup) => {
+  if (lastDate === (pointerYear + '-' + periodId)) {
+    // check if the last date in the queue is the current pointer date
+    if (isChampionship && (!leagueLocalStorage.trackLosers && !leagueLocalStorage.track3rdPlaceGame)) {
+      // if championship week, in a league not counting losers bracket or 3rd place games
+      // return immediately because we only process one matchup record for the date
+      return true;
+    } else if (leagueLocalStorage.trackLosers && !hasNextMatchup) {
+      // if tracking losers, return when we are on the last matchup of the week
+      return true;
+    } else if (leagueLocalStorage.track3rdPlaceGame && isThirdPlaceGame) {
+      // if tracking 3rd place but not other loser and it is third place game, return true
+      return true;
+    } else if (!hasNextMatchup) {
+      // if not the championship game and not tracking any losers, then return when there
+      // are no matchups left to process for the week
+      return true;
+    }
+  } return false;
 }
 
 createTables = () => {
@@ -496,7 +517,6 @@ allTimeWins.onclick = (element) => {
         });
       });
     }, 100);
-
   }
   getManagers(leagueDatabase.webdb.db, (managerList) => {
     getRecords(leagueDatabase.webdb.db, managerList, (records) => {
@@ -516,14 +536,14 @@ allTimeWins.onclick = (element) => {
   });
 }
 
-const saveWeeklyPowerRanking = (clonedRanking, title, ranking, callback) => {
+const saveWeeklyPowerRanking = (clonedRanking, title, ranking, callback, downloadImageFunction) => {
   let row = clonedRanking.shift();
   leagueDatabase.webdb.db.transaction((tx) => {
     tx.executeSql("INSERT INTO rankings(manager, week, year, ranking, description, title) VALUES (?,?,?,?,?,?)",
         [row.manager, currentWeek, selectedYear, row.place, row.description, title],
         () => {
-          if(clonedRanking.length > 0) { saveWeeklyPowerRanking(clonedRanking, title, ranking, callback); }
-          else { callback(ranking); }
+          if(clonedRanking.length > 0) { saveWeeklyPowerRanking(clonedRanking, title, ranking, callback, downloadImageFunction); }
+          else { callback(ranking, title, downloadImageFunction); }
         }, errorHandler);
    });
 }
@@ -536,29 +556,24 @@ const getTeamRecord = (teamMap, ownerName) => {
         return {
           wins: teamMap[teamKey].record.overallWins,
           losses: teamMap[teamKey].record.overallLosses,
-          ties: teamMap[teamKey].record.overallTies
+          ties: teamMap[teamKey].record.overallTies,
+          image: teamMap[teamKey].logoUrl,
+          teamName: teamMap[teamKey].teamLocation + ' ' + teamMap[teamKey].teamNickname
         };
       }
     }
   }
 }
 
-const generatePowerRanking = (rankingList) => {
-  isOverridePowerRanking = true;
-  console.log(rankingList);
-  rankingList.forEach((ranking) => {
-    let manager = ranking.manager;
-    let record = getTeamRecord(selectedYearLeagueSettings.teams, manager);
-    console.log(manager, record);
-    // Get trending stat
-  })
-}
-
 powerRankings.onclick = (element) => {
   if(isOverridePowerRanking) {
     if(confirm('Power ranking for the week has already been saved, are you sure you want to overwrite it?')) {
-      console.log("on confirm");
-      powerRankingClickFunction(element);
+      leagueDatabase.webdb.db.transaction((tx) => {
+        tx.executeSql("DELETE FROM rankings WHERE year = ? AND week = ?", [selectedYear, currentWeek],
+          () => {
+            powerRankingClickFunction(element);
+          }, errorHandler);
+        });
     }
   } else {
     powerRankingClickFunction(element);
@@ -566,6 +581,25 @@ powerRankings.onclick = (element) => {
 }
 
 const powerRankingClickFunction = (element) => {
+  const onReady = (htmlBlock) => {
+    chrome.tabs.create({
+      url: chrome.extension.getURL('../html/screenshot.html'),
+      //tabId: tabs[0].id,
+      active: false
+    });
+    setTimeout(() => {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.runtime.sendMessage({
+          msg: "something_completed",
+          data: {
+            name: "league_all_time_wins",
+            html: htmlBlock
+          }
+        });
+      });
+    }, 100);
+  }
+
   leagueDatabase.webdb.db.transaction((tx) => {
     tx.executeSql("CREATE TABLE IF NOT EXISTS " +
       "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT, title TEXT)", [],
@@ -588,7 +622,7 @@ const powerRankingClickFunction = (element) => {
         //save to DB
         let weeklyPowerRankingClone = JSON.parse(JSON.stringify(weeklyPowerRanking));
         // TODO: if same week already saved, need to delete old records - confirm modal?
-        saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking);
+        saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking, onReady);
       }, errorHandler);
   });
 }

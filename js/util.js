@@ -14,6 +14,24 @@ const getLeagueSettings = (yearList, leagueId) => {
   return leagueSettingsMap;
 }
 
+const getPowerRankingWeekNameDisplay = (currentWeek, finalRegSeasonGame, champGame) => {
+  if(currentWeek === 1) {
+    return 'Preseason';
+  } else if(currentWeek <= (finalRegSeasonGame + 1)) {
+    return 'Week ' + (currentWeek - 1);
+  } else {
+    var title = '';
+    switch(champGame - currentWeek) {
+      case 3: title = 'Round of 32'; break;
+      case 2: title = 'Round of 16'; break;
+      case 1: title = 'Quarterfinals'; break;
+      case 0: title = 'Semifinal'; break;
+      default: title =  'Championship';
+    }
+    return title;
+  }
+}
+
 /*
 * Retrieves the sacko holder for any given year
 */
@@ -144,6 +162,20 @@ const getManagers = (db, callback) => {
   let query = 'SELECT DISTINCT manager FROM matchups';
   db.transaction((tx) => {
     tx.executeSql(query, [],
+      (tx, rs) => {
+        const managerList = [];
+        for(var i=0; i<rs.rows.length; i++) {
+          managerList.push(rs.rows[i].manager);
+        }
+        callback(managerList);
+      });
+    });
+}
+
+const getManagersForYear = (db, year, callback) => {
+  let query = 'SELECT DISTINCT manager, year FROM matchups WHERE year = ?';
+  db.transaction((tx) => {
+    tx.executeSql(query, [year],
       (tx, rs) => {
         const managerList = [];
         for(var i=0; i<rs.rows.length; i++) {

@@ -22,7 +22,7 @@ const saveScreenshot = (callback) => {
 
 const closeWindow = () => {
   setTimeout(() => {
-    window.close();
+    //window.close();
   }, 1000);
 }
 

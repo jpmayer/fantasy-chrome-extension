@@ -4,7 +4,6 @@
     <style>
       .popup-container {
         width: 400px;
-        height: 145px;
       }
       .header {
         height: 20px;
@@ -20,7 +19,7 @@
         color: black;
       }
       .container-row {
-        padding: 5px;
+        padding: 10px 5px 10px 5px;
       }
       .sub-header {
         height: 16px;
@@ -31,6 +30,10 @@
       }
       .col-8 {
         width: 32%;
+        display: inline-block;
+      }
+      .col-12 {
+        width: 49%;
         display: inline-block;
       }
       .align-left {
@@ -55,6 +58,42 @@
       span#database-last-update {
         margin-left: 5px;
       }
+      #power-rankings-table {
+        width: 100%;
+        text-align: center;
+        padding-bottom: 10px;
+      }
+      #power-rankings-table thead {
+        font-weight: bold;
+      }
+      #power-rankings-table input[type="text"] {
+        width: 90%;
+        padding-left: 8px;
+        border-radius: 4px;
+        border: 1px solid #aaa;
+      }
+      #power-rankings-table td:first-child {
+        text-align: right;
+      }
+      #power-rankings-table select {
+        width: 95%;
+        background: #fafafa;
+        margin-left: 5px;
+      }
+      input#power-ranking-title {
+        background: inherit;
+        border: none !important;
+        border-bottom: 1px solid #aaa !important;
+        margin-bottom: 5px;
+        text-align: center;
+        font-size: 12px;
+        width: 68% !important;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        display: block;
+        border-radius: 0px !important;
+      }
     </style>
   </head>
   <body>
@@ -77,19 +116,27 @@
           <button id="update-database">Update</button>
         </div>
       </div>
-      <div class="container align-center" style="padding: 5px 0px;">
+      <div class="container align-center">
         <div class="sub-header align-left">
-          Generate Content
+          Generate League History Content
         </div>
         <div class="container-row">
-          <div class="col-8 align-left">
+          <div class="col-12 align-left">
             <button id="all-time-wins">Leader Board</button>
           </div>
-          <div class="col-8 align-center">
+          <div class="col-12 align-center">
             <button id="record-book">Record Book</button>
           </div>
-          <div class="col-8 align-right">
-            <button id="power-rankings">Power Rankings</button>
+        </div>
+      </div>
+      <div class="container align-center">
+        <div class="sub-header align-left">
+          Weekly Power Rankings - <span id="power-ranking-week"></span>
+        </div>
+        <div class="container-row">
+          <div class="align-right">
+            <table id="power-rankings-table"><tbody></tbody></table>
+            <button id="power-rankings">Generate Weekly Ranking</button>
           </div>
         </div>
       </div>
@@ -98,4 +145,5 @@
 </html>
 <script src="vendor/html2canvas.min.js"></script>
 <script src="../js/util.js"></script>
+<script src="../js/powerRankingUtil.js"></script>
 <script src="../js/popup.js"></script>

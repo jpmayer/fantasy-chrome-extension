@@ -2,6 +2,10 @@
 <html>
   <head>
     <style>
+      select#league-selector {
+        background: #f8f8f2;
+        border: none;
+      }
       .options-container {
         width: 500px;
       }
@@ -88,6 +92,7 @@
       }
       table#sacko-override tr td select{
         width: 100%;
+        background: #f8f8f2;
       }
       table#sacko-override tr td {
         text-align: center;
@@ -97,15 +102,15 @@
         width: 90%;
         margin-left: 5%;
       }
-      .leader-board-options td input[type="checkbox"] {
+      td input[type="checkbox"] {
         text-align: left;
         text-indent: 20px;
         line-height: 12px;
       }
-      .leader-board-options td input[type="checkbox"]::before {
+      td input[type="checkbox"]::before {
         content: 'DISABLED';
       }
-      .leader-board-options td input[type="checkbox"]:checked::before {
+      td input[type="checkbox"]:checked::before {
         content: 'ENABLED';
       }
     </style>
@@ -139,7 +144,7 @@
                 <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
                 <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
                 <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
-                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
+                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><thead><tr><th>Year</th><th>Manager</th></tr></thead><tbody></tbody></table></td></tr>
               </table>
             </div>
             </div>
@@ -168,6 +173,19 @@
                 <tr><td>Kicker - Game: </td><td><input type="text" id="KG-Name" /></td><td><input type="number" step="0.1" id="KG" /></td></tr>
                 <tr><td>Kicker - Season: </td><td><input type="text" id="KS-Name" /></td><td><input type="number" step="0.1" id="KS" /></td></tr>
               </table>
+            </div>
+          </div>
+          <div class="container category inactive">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Power Ranking Options
+            </div>
+            <div class="container-row" id="power-ranking-options">
+              <table>
+                <tr><td style="width: 42%;">Hide Team Names: </td><td><input type="checkbox" id="team-name-show" /></td></tr>
+                <tr><td>Show Team Pictures: </td><td><input type="checkbox" id="pictures-show" /></td></tr>
+                <tr><td>Manually Override Pictures: </td><td></td></tr>
+              </table>
+              <table id="pictures-override" style="padding-top: 0;"><thead><tr><th style="text-align:right;">Manager</th><th>Image URL</th></tr></thead><tbody></tbody></table>
             </div>
           </div>
           <div class="button-container">

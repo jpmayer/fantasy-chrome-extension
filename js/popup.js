@@ -511,7 +511,9 @@ const popupRecordBookListenerFunction = (request, sender, sendResponse) => {
 }
 
 const createRecordBookTab = () => {
+  chrome.runtime.onMessage.removeListener(popupPRListenerFunction);
   chrome.runtime.onMessage.removeListener(popupRecordBookListenerFunction);
+  chrome.runtime.onMessage.removeListener(popupListenerFunction);
   chrome.runtime.onMessage.addListener(popupRecordBookListenerFunction);
   chrome.tabs.query({
       active: true, currentWindow: true
@@ -557,6 +559,8 @@ const popupListenerFunction = (request, sender, sendResponse) => {
 }
 
 const createLeaderBoardTab = () => {
+  chrome.runtime.onMessage.removeListener(popupPRListenerFunction);
+  chrome.runtime.onMessage.removeListener(popupRecordBookListenerFunction);
   chrome.runtime.onMessage.removeListener(popupListenerFunction);
   chrome.runtime.onMessage.addListener(popupListenerFunction);
   chrome.tabs.query({
@@ -666,6 +670,8 @@ const popupPRListenerFunction = (request, sender, sendResponse) => {
 
 const createPowerRankingTab = () => {
   chrome.runtime.onMessage.removeListener(popupPRListenerFunction);
+  chrome.runtime.onMessage.removeListener(popupRecordBookListenerFunction);
+  chrome.runtime.onMessage.removeListener(popupListenerFunction);
   chrome.runtime.onMessage.addListener(popupPRListenerFunction);
   chrome.tabs.query({
       active: true, currentWindow: true

@@ -1,10 +1,11 @@
 #powerRanking {
-  width:100%;
+  width:650px;
   position:relative;
   margin-left:auto;
   margin-right:auto;
   border: 1px solid white;
-  border-radius: 3px;font:normal 10px verdana;
+  border-radius: 3px;
+  font:normal 10px verdana;
 }
 #powerRanking table {
   border:0px solid black;

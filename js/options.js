@@ -13,28 +13,40 @@ const scriptButton = document.getElementById('script');
 const customScript = document.getElementById('custom-script');
 const QBG = document.getElementById('QBG');
 const QBGName = document.getElementById('QBG-Name');
+const QBGDate = document.getElementById('QBG-Date');
 const QBS= document.getElementById('QBS');
 const QBSName= document.getElementById('QBS-Name');
+const QBSDate= document.getElementById('QBS-Date');
 const RBG = document.getElementById('RBG');
 const RBGName = document.getElementById('RBG-Name');
+const RBGDate = document.getElementById('RBG-Date');
 const RBS = document.getElementById('RBS');
 const RBSName = document.getElementById('RBS-Name');
+const RBSDate = document.getElementById('RBS-Date');
 const WRG = document.getElementById('WRG');
 const WRGName = document.getElementById('WRG-Name');
+const WRGDate = document.getElementById('WRG-Date');
 const WRS = document.getElementById('WRS');
 const WRSName = document.getElementById('WRS-Name');
+const WRSDate = document.getElementById('WRS-Date');
 const TEG = document.getElementById('TEG');
 const TEGName = document.getElementById('TEG-Name');
+const TEGDate = document.getElementById('TEG-Date');
 const TES = document.getElementById('TES');
 const TESName = document.getElementById('TES-Name');
+const TESDate = document.getElementById('TES-Date');
 const DSTG = document.getElementById('DSTG');
 const DSTGName = document.getElementById('DSTG-Name');
+const DSTGDate = document.getElementById('DSTG-Date');
 const DSTS = document.getElementById('DSTS');
 const DSTSName = document.getElementById('DSTS-Name');
+const DSTSDate = document.getElementById('DSTS-Date');
 const KG = document.getElementById('KG');
 const KGName = document.getElementById('KG-Name');
+const KGDate = document.getElementById('KG-Date');
 const KS = document.getElementById('KS');
 const KSName = document.getElementById('KS-Name');
+const KSDate = document.getElementById('KS-Date');
 
 const showLoserCheckbox = document.getElementById('losers-show');
 const show3rdPlaceCheckbox = document.getElementById('3rd-show');
@@ -127,6 +139,19 @@ const updateOptionsForLeague = () => {
     DSTSName.value = (data.DSTS) ? data.DSTS.name : null;
     KGName.value = (data.KG) ? data.KG.name : null;
     KSName.value = (data.KS) ? data.KS.name : null;
+
+    QBGDate.value = (data.QBG) ? data.QBG.date : null;
+    QBSDate.value = (data.QBS) ? data.QBS.date : null;
+    RBGDate.value = (data.RBG) ? data.RBG.date : null;
+    RBSDate.value = (data.RBS) ? data.RBS.date : null;
+    WRGDate.value = (data.WRG) ? data.WRG.date : null;
+    WRSDate.value = (data.WRS) ? data.WRS.date : null;
+    TEGDate.value = (data.TEG) ? data.TEG.date : null;
+    TESDate.value = (data.TES) ? data.TES.date : null;
+    DSTGDate.value = (data.DSTG) ? data.DSTG.date : null;
+    DSTSDate.value = (data.DSTS) ? data.DSTS.date : null;
+    KGDate.value = (data.KG) ? data.KG.date : null;
+    KSDate.value = (data.KS) ? data.KS.date : null;
 
     showLoserCheckbox.checked = (data.trackLosers) ? data.trackLosers : false;
     show3rdPlaceCheckbox.checked = (data.track3rdPlaceGame) ? data.track3rdPlaceGame : false;
@@ -283,9 +308,9 @@ const generateManagerDropdown = (managers, selectedManager, year) => {
 
 saveButton.onclick = (element) => {
   const savedObject = {};
-  savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
-    WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
-    DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value},
+  savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value, date: QBGDate.value }, QBS: { score: QBS.value, name: QBSName.value, date: QBSDate.value }, RBG: { score: RBG.value, name: RBGName.value, date: RBGDate.value }, RBS: { score: RBS.value, name: RBSName.value, date: RBSDate.value },
+    WRG: { score: WRG.value, name: WRGName.value, date: WRGDate.value }, WRS: { score: WRS.value, name: WRSName.value, date: WRSDate.value }, TEG: { score: TEG.value, name: TEGName.value, date: TEGDate.value }, TES: { score: TES.value, name: TESName.value, date: TESDate.value },
+    DSTG: { score: DSTG.value, name: DSTGName.value, date: DSTGDate.value }, DSTS: { score: DSTS.value, name: DSTSName.value, date: DSTSDate.value }, KG: { score: KG.value, name: KGName.value, date: KGDate.value }, KS: { score: KS.value, name: KSName.value, date: KSDate.value },
     lastSync: lastSync, sackoMap: sackoMap, managerMap: managerMap, managerImageMap: managerImageMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value,
     hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked, areIconsCollapsed: collapseIconsCheckbox.checked};
   chrome.storage.sync.set(savedObject, () => {

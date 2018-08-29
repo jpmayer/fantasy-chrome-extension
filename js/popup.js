@@ -37,6 +37,7 @@ let lastCreatedTabId = null;
 let htmlBlock = null;
 
 const positions = { QB: "0.0", RB: "2.0", WR: "4.0", TE: "6.0", DST: "16.0", K: "17.0" }
+const positionsByESPNValue = { "0.0": "QB", "2.0": "RB", "4.0": "WR", "6.0": "TE", "16.0": "DST", "17.0": "K" }
 
 //get initial options - league id and name, lastSync and former saved options
 chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {

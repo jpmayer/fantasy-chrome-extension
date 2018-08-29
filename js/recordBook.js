@@ -11,7 +11,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getMostPointsSeason = (db, leagueSettings, callback) => {
     let query = "SELECT manager, score, year, week FROM matchups"
     db.transaction((tx) => {
@@ -19,7 +19,7 @@ const getMostPointsGame = (db, callback) => {
           (tx, rs) => {
             if(rs.rows.length === 0) {
               callback(null);
-            } else {            
+            } else {
               var scoreMap = new Map();
               for(var i=0; i<rs.rows.length; i++) {
                 if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
@@ -35,7 +35,7 @@ const getMostPointsGame = (db, callback) => {
               }
               var maxEntry = { score: -Infinity };
               for(let [k, v] of scoreMap){
-                if(maxEntry.score < parseInt(v)){ 
+                if(maxEntry.score < parseInt(v)){
                     maxEntry.score = parseInt(v);
                     maxEntry.manager = k.split("-")[0];
                     maxEntry.year = k.split("-")[1];
@@ -46,7 +46,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getMostPointsMatchup = (db, callback) => {
     let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups ORDER BY matchupTotal DESC LIMIT 1"
     db.transaction((tx) => {
@@ -60,7 +60,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getFewestPointsGame = (db, callback) => {
     let query = "SELECT manager, score, year, week, vs FROM matchups ORDER BY score ASC LIMIT 1"
     db.transaction((tx) => {
@@ -74,7 +74,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getFewestPointsSeason = (db, leagueSettings, callback) => {
     let query = "SELECT manager, score, year, week FROM matchups"
     db.transaction((tx) => {
@@ -82,7 +82,7 @@ const getMostPointsGame = (db, callback) => {
           (tx, rs) => {
             if(rs.rows.length === 0) {
               callback(null);
-            } else {            
+            } else {
               var scoreMap = new Map();
               for(var i=0; i<rs.rows.length; i++) {
                 if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
@@ -98,7 +98,7 @@ const getMostPointsGame = (db, callback) => {
               }
               var minEntry = { score: Infinity };
               for(let [k, v] of scoreMap){
-                if(minEntry.score > parseInt(v)){ 
+                if(minEntry.score > parseInt(v)){
                     minEntry.score = parseInt(v);
                     minEntry.manager = k.split("-")[0];
                     minEntry.year = k.split("-")[1];
@@ -109,7 +109,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getFewestPointsMatchup = (db, callback) => {
     let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups ORDER BY matchupTotal ASC LIMIT 1"
     db.transaction((tx) => {
@@ -123,7 +123,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getMostPointsAllowedSeason = (db, leagueSettings, callback) => {
     let query = "SELECT vs, score, year, week FROM matchups"
     db.transaction((tx) => {
@@ -131,7 +131,7 @@ const getMostPointsGame = (db, callback) => {
           (tx, rs) => {
             if(rs.rows.length === 0) {
               callback(null);
-            } else {            
+            } else {
               var scoreMap = new Map();
               for(var i=0; i<rs.rows.length; i++) {
                 if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
@@ -149,7 +149,7 @@ const getMostPointsGame = (db, callback) => {
               }
               var maxEntry = { totalPoints: -Infinity };
               for(let [k, v] of scoreMap){
-                if(maxEntry.totalPoints < parseInt(v.totalPoints)){ 
+                if(maxEntry.totalPoints < parseInt(v.totalPoints)){
                     maxEntry.totalPoints = parseInt(v.totalPoints);
                     maxEntry.vs = v.vs;
                     maxEntry.year = v.year;
@@ -160,7 +160,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
     let query = "SELECT vs, score, year, week FROM matchups"
     db.transaction((tx) => {
@@ -168,7 +168,7 @@ const getMostPointsGame = (db, callback) => {
           (tx, rs) => {
             if(rs.rows.length === 0) {
               callback(null);
-            } else {       
+            } else {
               var scoreMap = new Map();
               for(var i=0; i<rs.rows.length; i++) {
                 if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
@@ -201,7 +201,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getLongestWinStreak = (db, callback) => {
     let query = "SELECT manager, year, week, winLoss FROM matchups ORDER BY manager ASC, year ASC, week ASC";
     db.transaction((tx) => {
@@ -224,7 +224,7 @@ const getMostPointsGame = (db, callback) => {
               if(rs.rows[i].winLoss === 1){
                 if(isWinning === 1){
                   currWinStreak.push(rs.rows[i])
-                } else { 
+                } else {
                   currWinStreak = [rs.rows[i]];
                   isWinning = 1;
                 }
@@ -236,7 +236,7 @@ const getMostPointsGame = (db, callback) => {
                 currWinStreak = []
               }
               if(currWinStreak.length === topWinStreak.length){
-                if(!allWinStreaks.games === currWinStreak) { 
+                if(!allWinStreaks.games === currWinStreak) {
                   allWinStreaks.games = currWinStreak
                 }
               } else if(currWinStreak.length > topWinStreak.length){
@@ -251,7 +251,7 @@ const getMostPointsGame = (db, callback) => {
         });
     });
   }
-  
+
   const getLongestLosingStreak = (db, callback) => {
     let query = "SELECT manager, year, week, winLoss FROM matchups ORDER BY manager ASC, year ASC, week ASC";
     db.transaction((tx) => {
@@ -274,7 +274,7 @@ const getMostPointsGame = (db, callback) => {
               if(rs.rows[i].winLoss === 2){
                 if(isLosing === 1){
                   currLoseStreak.push(rs.rows[i])
-                } else { 
+                } else {
                   currLoseStreak = [rs.rows[i]];
                   isLosing = 1;
                 }
@@ -286,8 +286,8 @@ const getMostPointsGame = (db, callback) => {
                 currLoseStreak = []
               }
               if(currLoseStreak.length === topLoseStreak.length){
-                if(!allLoseStreaks.games === currLoseStreak) { 
-                  allLoseStreaks.games = currLoseStreak 
+                if(!allLoseStreaks.games === currLoseStreak) {
+                  allLoseStreaks.games = currLoseStreak
                 }
               } else if(currLoseStreak.length > topLoseStreak.length){
                 topLoseStreak = currLoseStreak;
@@ -301,7 +301,7 @@ const getMostPointsGame = (db, callback) => {
         });
     });
   }
-  
+
   const getMostPointsPlayerGame = (db, playerPosition, callback) => {
     let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC LIMIT 1";
     db.transaction((tx) => {
@@ -315,7 +315,7 @@ const getMostPointsGame = (db, callback) => {
           });
     });
   }
-  
+
   const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, callback) => {
     let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC";
     db.transaction((tx) => {
@@ -339,7 +339,7 @@ const getMostPointsGame = (db, callback) => {
                 }
                 var maxEntry = { score: 0 };
                 for(let [k, v] of scoreMap){
-                  if(parseInt(maxEntry.score) < parseInt(v)){ 
+                  if(parseInt(maxEntry.score) < parseInt(v)){
                       maxEntry.score = parseInt(v);
                       maxEntry.player = k.split("-")[0];
                       maxEntry.year = k.split("-")[1];
@@ -353,7 +353,7 @@ const getMostPointsGame = (db, callback) => {
 
   const mergeDataIntoRecordBook = (db, playerPositions, leagueSettings, leagueLocalStorage, callback) => {
     var records = {};
-    
+
     getMostPointsGame(db, function(resultMPG){
       records["mostPointsGame"] = resultMPG;
       getMostPointsSeason(db, leagueSettings, function(resultMPS){
@@ -394,16 +394,16 @@ const getMostPointsGame = (db, callback) => {
       });
     });
   }
-  
+
   const generateRecordBookHTML = (records) => {
 
     mostMatchupString = records["mostPointsMatchup"].manager + " ("+records["mostPointsMatchup"].score+") vs " + records["mostPointsMatchup"].vs +" ("+parseInt(records["mostPointsMatchup"].matchupTotal-records["mostPointsMatchup"].score)+")";
     fewestMatchupString = records["fewestPointsMatchup"].manager + " ("+records["fewestPointsMatchup"].score+") vs " + records["fewestPointsMatchup"].vs +" ("+parseInt(records["fewestPointsMatchup"].matchupTotal-records["fewestPointsMatchup"].score)+")";
-    
+
     resultString = "<div id='recordBook'>"
     resultString = resultString + "<table>"
     resultString = resultString + "<tr>"
-    resultString = resultString + "<th colspan='3' class='header'><h3>League Record Book</h3></th>"
+    resultString = resultString + "<th colspan='3'><h3>League Record Book</h3></th>"
     resultString = resultString + "</tr>"
     resultString = resultString + "<tr> <td class='column1'><b>Category</b></td><td class='column2'><b>Record</b></td><td class='column3'><b>Holder</b></td></tr>"
     resultString = resultString + "<tr> <td class='recordType odd'>Most Points (Game) </td><td class='center odd'>" + records["mostPointsGame"].score + "</td><td class='center odd'>" + records["mostPointsGame"].manager + "</td></tr>"
@@ -429,56 +429,6 @@ const getMostPointsGame = (db, callback) => {
     resultString = resultString + "<tr> <td class='recordType odd'>Most Points-K (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-K"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-K"].player + "</td></tr>"
     resultString = resultString + "<tr> <td class='recordType even'>Most Points-K (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-K"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-K"].player + " - " + records["mostPointsPlayerSeason-K"].year + "</td></tr>"
     resultString = resultString + "</table></div>"
-    resultString = resultString + "<style>"
-    resultString = resultString + ".header {"
-    resultString = resultString + "  width:500px;"
-    resultString = resultString + "  background-color:#1D7225;"
-    resultString = resultString + "  color:white;"
-    resultString = resultString + "  text-align:center;"
-    resultString = resultString + "  border-radius: 3px 3px 0px 0px;"
-    resultString = resultString + "}"
-    resultString = resultString + ".column1 {"
-    resultString = resultString + "width:250px;"
-    resultString = resultString + "padding-left:5px;"
-    resultString = resultString + "background-color:#6DBB75;"
-    resultString = resultString + "text-align:left;"
-    resultString = resultString + "}"
-    resultString = resultString + ".column2 {"
-    resultString = resultString + "  background-color:#6DBB75;"
-    resultString = resultString + "  text-align:center;"
-    resultString = resultString + "  width:75px"
-    resultString = resultString + "}"
-    resultString = resultString + ".column3 {"
-    resultString = resultString + "  background-color:#6DBB75;"
-    resultString = resultString + "  text-align:center;"
-    resultString = resultString + "  padding-left:5px"
-    resultString = resultString + "}"
-    resultString = resultString + ".odd{"
-    resultString = resultString + "background-color:#F2F2E8;"
-    resultString = resultString + "}"
-    resultString = resultString + ".even{"
-    resultString = resultString + "background-color:#F8F8F2;"
-    resultString = resultString + "}"
-    resultString = resultString + ".center{"
-    resultString = resultString + "text-align:center;"
-    resultString = resultString + "}"
-    resultString = resultString + ".recordType{"
-    resultString = resultString + "width:250px;"
-    resultString = resultString + "padding-left:5px;"
-    resultString = resultString + "padding-top:5px;"
-    resultString = resultString + "}"
-    resultString = resultString + "#recordBook{"
-    resultString = resultString + "width:100%;"
-    resultString = resultString + "position:relative;"
-    resultString = resultString + "margin-left:auto;"
-    resultString = resultString + "margin-right:auto;"
-    resultString = resultString + "}"
-    resultString = resultString + "#recordBook table {"
-    resultString = resultString + "border:0px solid black;"
-    resultString = resultString + "font-size:12px;"
-    resultString = resultString + "width:100%;"
-    resultString = resultString + "}"
-    resultString = resultString + "</style>"
 
     return resultString;
   }

@@ -1,0 +1,59 @@
+<style>
+  .header {
+    width:500px;
+    background-color:#1D7225;
+    color:white;
+    text-align:center;
+    border-radius: 3px 3px 0px 0px;
+  }
+  .column1 {
+    width:250px;
+    padding-left:5px;
+    background-color:#6DBB75;
+    text-align:left;
+  }
+  .column2 {
+    background-color:#6DBB75;
+    text-align:center;
+    width:75px
+  }
+  .column3 {
+    background-color:#6DBB75;
+    text-align:center;
+    padding-left:5px
+  }
+  .odd{
+    background-color:#F2F2E8;
+  }
+  .even{
+    background-color:#F8F8F2;
+  }
+  .center{
+    text-align:center;
+  }
+  .recordType{
+    width:250px;
+    padding-left:5px;
+    padding-top:5px;
+  }
+  #recordBook{
+    width:650px;
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    font:normal 10px verdana;
+  }
+  #recordBook h3 {
+    margin: 0px;
+  }
+  #recordBook table {
+    border:0px solid black;
+    font-size:12px;
+    width:100%;
+  }
+  #recordBook th {
+    width:500px;
+    background-color:#1D7225;
+    color:white;
+  }
+</style>

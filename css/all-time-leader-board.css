@@ -53,4 +53,11 @@
     padding-left:4px;
     padding-right:4px;
   }
+  span.icon-number {
+    font-size: 8px;
+    width: 0px;
+    display: inline-block;
+    color: #555;
+    position: relative;
+  }
 </style>

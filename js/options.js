@@ -39,6 +39,7 @@ const KSName = document.getElementById('KS-Name');
 const showLoserCheckbox = document.getElementById('losers-show');
 const show3rdPlaceCheckbox = document.getElementById('3rd-show');
 const hideAverageLineCheckbox = document.getElementById('acuna-show');
+const collapseIconsCheckbox = document.getElementById('collapse-icons');
 const averageLineNameInput = document.getElementById('acuna-name');
 const lastPlaceNameInput = document.getElementById('sacko-name');
 const hideTeamNamesCheckbox = document.getElementById('team-name-show');
@@ -134,6 +135,7 @@ const updateOptionsForLeague = () => {
     lastPlaceNameInput.value = (data.lastPlaceName) ? data.lastPlaceName : null;
     hideTeamNamesCheckbox.checked = (data.hideTeamNames) ? data.hideTeamNames : false;
     showPicturesCheckbox.checked = (data.showTeamPictures) ? data.showTeamPictures : false;
+    collapseIconsCheckbox.checked = (data.areIconsCollapsed) ? data.areIconsCollapsed : false;
 
     //get options from database
     const query = 'SELECT DISTINCT year FROM matchups';
@@ -251,7 +253,7 @@ const populateLastPlaceSelection = (years, sackoMap, owners) => {
     sackoTable.getElementsByTagName('tbody')[0].appendChild(row);
   })
   let tableHeight = window.getComputedStyle(sackoTable).getPropertyValue('height');
-  const newHeight = parseInt(tableHeight.split('px')[0],10) + 129;
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 149;
   leaderBoardOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
@@ -285,7 +287,7 @@ saveButton.onclick = (element) => {
     WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
     DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value},
     lastSync: lastSync, sackoMap: sackoMap, managerMap: managerMap, managerImageMap: managerImageMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value,
-    hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked};
+    hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked, areIconsCollapsed: collapseIconsCheckbox.checked};
   chrome.storage.sync.set(savedObject, () => {
     alert("saved");
   });

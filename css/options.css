@@ -40,7 +40,6 @@ tr td:first-child {
 }
 td input[type="number"] {
   width: 50px;
-  margin-left: 5px;
 }
 td input {
   text-align: center;

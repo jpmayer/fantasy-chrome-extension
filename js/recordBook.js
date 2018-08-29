@@ -302,7 +302,17 @@ const getMostPointsGame = (db, callback) => {
     });
   }
 
-  const getMostPointsPlayerGame = (db, playerPosition, callback) => {
+  const mapPositionAndTypeToKey = (position, type) => {
+    let returnString = positionsByESPNValue[position];
+    if (type === "game") {
+      returnString  += "G";
+    } else {
+      returnString  += "S";
+    }
+    return returnString;
+  }
+
+  const getMostPointsPlayerGame = (db, playerPosition, leagueDict, callback) => {
     let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC LIMIT 1";
     db.transaction((tx) => {
         tx.executeSql(query, [],
@@ -310,13 +320,22 @@ const getMostPointsGame = (db, callback) => {
             if(rs.rows.length === 0) {
               callback(null);
             } else {
-              callback(rs.rows[0]);
+              let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'game')];
+              if(localStorageRecord && parseFloat(localStorageRecord.score) > rs.rows[0].score) {
+                callback({
+                  score: localStorageRecord.score,
+                  player: localStorageRecord.name,
+                  year: localStorageRecord.date,
+                });
+              } else {
+                callback(rs.rows[0]);
+              }
             }
           });
     });
   }
 
-  const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, callback) => {
+  const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, leagueDict, callback) => {
     let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC";
     db.transaction((tx) => {
         tx.executeSql(query, [],
@@ -345,7 +364,16 @@ const getMostPointsGame = (db, callback) => {
                       maxEntry.year = k.split("-")[1];
                   }
                 }
-                callback(maxEntry);
+                let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'season')];
+                if(localStorageRecord.score > maxEntry.score) {
+                  callback({
+                    score: localStorageRecord.score,
+                    player: localStorageRecord.name,
+                    year: localStorageRecord.date,
+                  });
+                } else {
+                  callback(maxEntry);
+                }
             }
           });
     });
@@ -353,39 +381,38 @@ const getMostPointsGame = (db, callback) => {
 
   const mergeDataIntoRecordBook = (db, playerPositions, leagueSettings, leagueLocalStorage, callback) => {
     var records = {};
-
-    getMostPointsGame(db, function(resultMPG){
-      records["mostPointsGame"] = resultMPG;
-      getMostPointsSeason(db, leagueSettings, function(resultMPS){
-        records["mostPointsSeason"] = resultMPS;
-        getMostPointsMatchup(db, function(resultMPM){
-          records["mostPointsMatchup"] = resultMPM;
-          getFewestPointsGame(db, function(resultFPG){
-            records["fewestPointsGame"] = resultFPG;
-            getFewestPointsSeason(db, leagueSettings, function(resultFPS){
-              records["fewestPointsSeason"] = resultFPS;
-              getFewestPointsMatchup(db, function(resultFPM){
-                records["fewestPointsMatchup"] = resultFPM;
-                getMostPointsAllowedSeason(db, leagueSettings, function(resultMPAS){
-                  records["mostPointsAllowedSeason"] = resultMPAS;
-                  getFewestPointsAllowedSeason(db, leagueSettings, function(resultFPAS){
-                    records["fewestPointsAllowedSeason"] = resultFPAS;
-                    getLongestWinStreak(db, function(resultLWS){
-                      records["winStreak"] = resultLWS;
-                      getLongestLosingStreak(db, function(resultLLS){
-                        records["loseStreak"] = resultLLS;
-                        Object.keys(playerPositions).forEach(pos => {
-                          getMostPointsPlayerGame(db, playerPositions[pos], function(resultMPPG){
-                            records["mostPointsPlayerGame-"+pos] = resultMPPG;
-                          });
-                          getMostPointsPlayerSeason(db, playerPositions[pos], leagueSettings, function(resultMPPS){
-                            records["mostPointsPlayerSeason-"+pos] = resultMPPS;
-                            if (pos === "K"){
-                              chrome.storage.sync.get(['league-' + leagueId], (response) => {
-                                const leagueDict = (response['league-' + leagueId]) ? response['league-' + leagueId] : {};
+    chrome.storage.sync.get(['league-' + leagueId], (response) => {
+      const leagueDict = (response['league-' + leagueId]) ? response['league-' + leagueId] : {};
+      getMostPointsGame(db, function(resultMPG){
+        records["mostPointsGame"] = resultMPG;
+        getMostPointsSeason(db, leagueSettings, function(resultMPS){
+          records["mostPointsSeason"] = resultMPS;
+          getMostPointsMatchup(db, function(resultMPM){
+            records["mostPointsMatchup"] = resultMPM;
+            getFewestPointsGame(db, function(resultFPG){
+              records["fewestPointsGame"] = resultFPG;
+              getFewestPointsSeason(db, leagueSettings, function(resultFPS){
+                records["fewestPointsSeason"] = resultFPS;
+                getFewestPointsMatchup(db, function(resultFPM){
+                  records["fewestPointsMatchup"] = resultFPM;
+                  getMostPointsAllowedSeason(db, leagueSettings, function(resultMPAS){
+                    records["mostPointsAllowedSeason"] = resultMPAS;
+                    getFewestPointsAllowedSeason(db, leagueSettings, function(resultFPAS){
+                      records["fewestPointsAllowedSeason"] = resultFPAS;
+                      getLongestWinStreak(db, function(resultLWS){
+                        records["winStreak"] = resultLWS;
+                        getLongestLosingStreak(db, function(resultLLS){
+                          records["loseStreak"] = resultLLS;
+                          Object.keys(playerPositions).forEach(pos => {
+                            getMostPointsPlayerGame(db, playerPositions[pos], leagueDict, function(resultMPPG){
+                              records["mostPointsPlayerGame-"+pos] = resultMPPG;
+                            });
+                            getMostPointsPlayerSeason(db, playerPositions[pos], leagueSettings, leagueDict, function(resultMPPS){
+                              records["mostPointsPlayerSeason-"+pos] = resultMPPS;
+                              if (pos === "K"){
                                 callback(generateRecordBookHTML(records, leagueDict));
-                              });
-                            }
+                              }
+                            });
                           });
                         });
                       });

@@ -431,13 +431,14 @@ updateDatabase.onclick = (element) => {
         leagueNameMap[dbName] = leagueName;
       }
       // if last sync is null, clear database to be sure an old instance isnt still there
-      chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {});
-      leagueDatabase.webdb.db.transaction((tx) => {
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", [], ()=>{}, errorHandler);
-        tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                      "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss INTEGER, score FLOAT, matchupTotal Float, pointDiff FLOAT, isThirdPlaceGame BOOLEAN, isChampionship BOOLEAN, isLosersBacketGame BOOLEAN)", [],
-                      () => { createTables(); }, errorHandler);
+      chrome.storage.sync.set({'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap}, () => {
+        leagueDatabase.webdb.db.transaction((tx) => {
+          tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                        "history(manager TEXT, week INTEGER, year INTEGER, player TEXT, playerPosition TEXT, score FLOAT)", [], ()=>{}, errorHandler);
+          tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                        "matchups(manager TEXT, week INTEGER, year INTEGER, vs TEXT, isHomeGame BOOLEAN, winLoss INTEGER, score FLOAT, matchupTotal Float, pointDiff FLOAT, isThirdPlaceGame BOOLEAN, isChampionship BOOLEAN, isLosersBacketGame BOOLEAN)", [],
+                        () => { createTables(); }, errorHandler);
+                      });
       });
     } else {
       createTables();

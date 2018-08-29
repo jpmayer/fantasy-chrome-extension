@@ -365,7 +365,7 @@ const getMostPointsGame = (db, callback) => {
                   }
                 }
                 let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'season')];
-                if(localStorageRecord.score > maxEntry.score) {
+                if(localStorageRecord && localStorageRecord.score > maxEntry.score) {
                   callback({
                     score: localStorageRecord.score,
                     player: localStorageRecord.name,
@@ -428,7 +428,7 @@ const getMostPointsGame = (db, callback) => {
   }
 
   const getManagerName = (manager, managerMap) => {
-    return (managerMap[manager]) ? managerMap[manager] : manager;
+    return (managerMap && managerMap[manager]) ? managerMap[manager] : manager;
   }
 
   const roundScore = (score) => {

@@ -342,7 +342,7 @@ const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
     resultString = resultString + `<tr class='leader-header'><td><b></b></td><td><b>Holder</b></td><td><b>Wins</b></td><td><b>Losses</b></td><td><b>Ties</b></td><td><b>Win %</b></td><td><b>Points</b></td><td><b>PPG</b></td><td><b>Diff</b></td><td><b>Titles</b></td><td><b>${lastPlaceName}</b></td><td><b>Pl App</b></td></tr>`;
     for(var i = 0; i < recordArray.length; i++){
       let trophyString = '', sackoString = '';
-      let managerName = (leagueDict.managerMap[recordArray[i].manager]) ? leagueDict.managerMap[recordArray[i].manager] : recordArray[i].manager;
+      let managerName = (leagueDict.managerMap && leagueDict.managerMap[recordArray[i].manager]) ? leagueDict.managerMap[recordArray[i].manager] : recordArray[i].manager;
       let pointDiff = (recordArray[i].pointDiff > 0) ? "+" + recordArray[i].pointDiff.toFixed(1) : recordArray[i].pointDiff.toFixed(1);
       if(recordArray[i].sackos > 0) {
         if(leagueDict.areIconsCollapsed) {

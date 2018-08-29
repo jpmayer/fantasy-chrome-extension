@@ -1,9 +1,9 @@
-# fantasy-chrome-extension
+# LM Note Generator For ESPN Fantasy Football
 Creates LM Note content for a public ESPN Fantasy Football League.
 
 ## Documentation
 
-(Wiki)[https://github.com/jpmayer/fantasy-chrome-extension/wiki]
+[Wiki](https://github.com/jpmayer/fantasy-chrome-extension/wiki)
 
 ## Installation
 

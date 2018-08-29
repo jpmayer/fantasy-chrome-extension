@@ -35,6 +35,10 @@ The power ranking action will require more input before rendering.
 
 ## Options
 
+Right click the extension icon in the browser toolbar and click 'Options'
+
+Or
+
 Navigate to
 
 > [chrome://extensions/](chrome://extensions/)

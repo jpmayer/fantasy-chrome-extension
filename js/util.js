@@ -133,7 +133,7 @@ const didAppearInPlayoffs = (db, manager, year, leagueSettings, callback) => {
     tx.executeSql(query, [manager, year, leagueSettings.finalRegularSeasonMatchupPeriodId],
       (tx, rs) => {
         callback((rs.rows.length > 0));
-      })
+      }, errorHandler)
   })
 }
 
@@ -154,7 +154,7 @@ const getPoints = (db, manager, callback) => {
           pointDiff: rs.rows[0].pointDiffSum,
           pointsPer: ppg
         });
-      })
+      }, errorHandler)
   })
 }
 
@@ -168,7 +168,7 @@ const getManagers = (db, callback) => {
           managerList.push(rs.rows[i].manager);
         }
         callback(managerList);
-      });
+      }, errorHandler);
     });
 }
 
@@ -182,7 +182,7 @@ const getManagersForYear = (db, year, callback) => {
           managerList.push(rs.rows[i].manager);
         }
         callback(managerList);
-      });
+      }, errorHandler);
     });
 }
 
@@ -222,7 +222,7 @@ const getRecord = (db, manager, callback) => {
           ties: ties,
           winPercentage: winPercentage
         };
-      })
+      }, errorHandler)
   })
 }
 
@@ -331,6 +331,7 @@ const mergeDataIntoRecords = (records, sackos, champions, playoffApps, points) =
 }
 
 const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
+  console.log("getLeaderBoard")
   // get sacko overrides from local storage
   chrome.storage.sync.get(['league-' + leagueSettings.id], (response) => {
     const leagueDict = response['league-' + leagueSettings.id];
@@ -363,21 +364,6 @@ const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
       resultString = resultString + "<tr class='row'> <td class='place'>" + (i + 1) + ". </td><td>" + managerName + "</td><td>" + recordArray[i].wins + "</td><td>" + recordArray[i].losses + "</td><td>" + recordArray[i].ties + "</td><td>" + recordArray[i].winPercentage.toFixed(1) + "%</td><td>" + recordArray[i].pointsScored.toFixed(1) + "</td><td>" + recordArray[i].pointsPer.toFixed(1) + "</td><td>" + pointDiff + "</td><td>" + trophyString + "</td><td>" + sackoString + "</td><td>" + recordArray[i].playoffApps + "</td></tr>"
     }
     resultString = resultString + "</table></div>";
-    resultString = resultString + "<style>";
-    resultString = resultString + "#winLeaders{position:relative;margin-left:auto;margin-right:auto;font:normal 10px verdana;}";
-    resultString = resultString + ".win-leader-table{width:650px;border:0px solid black; font-size:12px;position:relative;text-align:center;}";
-    resultString = resultString + ".win-leader-table th{width:500px;background-color:#1D7225;color:white;}";
-    resultString = resultString + ".win-leader-table th h3{margin:0px;}";
-    resultString = resultString + ".win-leader-table td{border-right:1px solid white;}";
-    resultString = resultString + ".win-leader-table td:last-child{border-right:none;}";
-    resultString = resultString + ".place{width:20px;padding-left:5px;padding-top:5px}";
-    resultString = resultString + ".row:nth-child(odd) {background-color:#F2F2E8;}";
-    resultString = resultString + ".row:nth-child(even) {background-color:#F8F8F2;}";
-    resultString = resultString + ".leader-header{background-color:#6DBB75;font-size: 10px;}";
-    resultString = resultString + ".acunaRow{background-color:#e35e52;}";
-    resultString = resultString + ".acuna{font-size: 7px;line-height: 7px;color: white;}";
-    resultString = resultString + "#winLeader td b{padding-left:4px;padding-right:4px;}";
-    resultString = resultString + "</style>";
     callback(resultString);
   });
 }

@@ -95,9 +95,17 @@ for(var h = 0; h < categories.length; h++) {
   })(h);
 }
 
+show3rdPlaceCheckbox.addEventListener('change', (event) => {
+  alert("Changing this setting will require the database be refreshed for the change to affect already recorded records.");
+});
+
 leagueSelector.addEventListener('change', (event) => {
   currentLeague = event.target.value;
   updateOptionsForLeague();
+});
+
+showLoserCheckbox.addEventListener('change', (event) => {
+  alert("Changing this setting will require the database be refreshed for the change to affect already recorded records.");
 });
 
 const updateOptionsForLeague = () => {

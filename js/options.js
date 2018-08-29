@@ -63,9 +63,7 @@ const recordBoardOptionsDiv = document.getElementById('record-board-options');
 const powerRankingOptionsDiv = document.getElementById('power-ranking-options');
 
 const managerTable = document.getElementById('manager-override');
-const managerTableBody = managerTable.getElementsByTagName( 'tbody' )[0];
 const managerImageTable = document.getElementById('pictures-override');
-const managerImageTableBody = managerImageTable.getElementsByTagName( 'tbody' )[0];
 const sackoTable = document.getElementById('sacko-override');
 
 const errorHandler = (transaction, error) => {
@@ -222,69 +220,121 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
 });
 
 const populateManagerImageOverride = (managers) => {
-  managerImageTableBody.innerHTML = "";
-  managers.forEach((manager) => {
-    const row = document.createElement('tr');
-    const nameCell = document.createElement('td');
-    nameCell.setAttribute('style','width: 33%;');
-    nameCell.innerHTML = manager + ":";
-    const pictureCell = document.createElement('td');
-    const pictureInput = document.createElement('input');
-    pictureInput.setAttribute('type','text');
-    pictureInput.setAttribute('style','margin-left: 5%; width: 90%;');
-    let managerValue = (managerImageMap[manager]) ? managerImageMap[manager] : '';
-    pictureInput.setAttribute('value', managerValue);
-    pictureInput.addEventListener('change', (event) => {
-      managerImageMap[manager] = event.target.value;
+  managerImageTable.innerHTML = "";
+  if(managers && managers.length > 0) {
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const managerHeader = document.createElement('th');
+    managerHeader.innerHTML = 'Manager';
+    const imageHeader = document.createElement('th');
+    imageHeader.innerHTML = 'Image URL';
+    const tbody = document.createElement('tbody');
+    managerHeader.setAttribute('style','text-align:right;');
+    tr.appendChild(managerHeader);
+    tr.appendChild(imageHeader);
+    thead.appendChild(tr);
+    managerImageTable.appendChild(thead);
+    managerImageTable.appendChild(tbody);
+    managers.forEach((manager) => {
+      const row = document.createElement('tr');
+      const nameCell = document.createElement('td');
+      nameCell.setAttribute('style','width: 33%;');
+      nameCell.innerHTML = manager + ":";
+      const pictureCell = document.createElement('td');
+      const pictureInput = document.createElement('input');
+      pictureInput.setAttribute('type','text');
+      pictureInput.setAttribute('style','margin-left: 5%; width: 90%;');
+      let managerValue = (managerImageMap[manager]) ? managerImageMap[manager] : '';
+      pictureInput.setAttribute('value', managerValue);
+      pictureInput.addEventListener('change', (event) => {
+        managerImageMap[manager] = event.target.value;
+      });
+      pictureCell.appendChild(pictureInput);
+      row.appendChild(nameCell);
+      row.appendChild(pictureCell);
+      managerImageTable.getElementsByTagName( 'tbody' )[0].appendChild(row);
     });
-    pictureCell.appendChild(pictureInput);
-    row.appendChild(nameCell);
-    row.appendChild(pictureCell);
-    managerImageTableBody.appendChild(row);
-  });
-  let tableHeight = window.getComputedStyle(managerImageTableBody).getPropertyValue('height');
+  } else {
+    managerImageTable.innerHTML = "<div><span>No matchup data has been uploaded to the database, please come back after having uploaded at least one weekly matchup.</span></div>";
+  }
+  let tableHeight = window.getComputedStyle(managerImageTable).getPropertyValue('height');
   const newHeight = parseInt(tableHeight.split('px')[0],10) + 105;
   powerRankingOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
 const populateManagerAlias = (managers) => {
-  managerTableBody.innerHTML = "";
-  managers.forEach((manager) => {
-    const row = document.createElement('tr');
-    const nameCell = document.createElement('td');
-    nameCell.setAttribute('style','width: 33%;');
-    nameCell.innerHTML = manager + ":";
-    const aliasCell = document.createElement('td');
-    const aliasInput = document.createElement('input');
-    aliasInput.setAttribute('type','text');
-    aliasInput.setAttribute('style','margin-left: 5%; width: 90%;');
-    let managerValue = (managerMap[manager]) ? managerMap[manager] : '';
-    aliasInput.setAttribute('value', managerValue);
-    aliasInput.addEventListener('change', (event) => {
-      managerMap[manager] = event.target.value;
+  managerTable.innerHTML = "";
+  if(managers && managers.length > 0) {
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const managerHeader = document.createElement('th');
+    managerHeader.innerHTML = 'Manager';
+    const aliasHeader = document.createElement('th');
+    aliasHeader.innerHTML = 'Alias';
+    const tbody = document.createElement('tbody');
+    managerHeader.setAttribute('style','text-align:right;');
+    tr.appendChild(managerHeader);
+    tr.appendChild(aliasHeader);
+    thead.appendChild(tr);
+    managerTable.appendChild(thead);
+    managerTable.appendChild(tbody);
+    managers.forEach((manager) => {
+      const row = document.createElement('tr');
+      const nameCell = document.createElement('td');
+      nameCell.setAttribute('style','width: 33%;');
+      nameCell.innerHTML = manager + ":";
+      const aliasCell = document.createElement('td');
+      const aliasInput = document.createElement('input');
+      aliasInput.setAttribute('type','text');
+      aliasInput.setAttribute('style','margin-left: 5%; width: 90%;');
+      let managerValue = (managerMap[manager]) ? managerMap[manager] : '';
+      aliasInput.setAttribute('value', managerValue);
+      aliasInput.addEventListener('change', (event) => {
+        managerMap[manager] = event.target.value;
+      });
+      aliasCell.appendChild(aliasInput);
+      row.appendChild(nameCell);
+      row.appendChild(aliasCell);
+      managerTable.getElementsByTagName( 'tbody' )[0].appendChild(row);
     });
-    aliasCell.appendChild(aliasInput);
-    row.appendChild(nameCell);
-    row.appendChild(aliasCell);
-    managerTableBody.appendChild(row);
-  });
-  let tableHeight = window.getComputedStyle(managerTableBody).getPropertyValue('height');
-  const newHeight = parseInt(tableHeight.split('px')[0],10) + 29;
+  } else {
+    managerTable.innerHTML = "<div><span>No matchup data has been uploaded to the database, please come back after having uploaded at least one weekly matchup.</span></div>";
+  }
+
+  let tableHeight = window.getComputedStyle(managerTable).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 11;
   managerOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
 const populateLastPlaceSelection = (years, sackoMap, owners) => {
-  sackoTable.getElementsByTagName('tbody')[0].innerHTML = "";
-  years.forEach((year) => {
-    const row = document.createElement('tr');
-    const yearCell = document.createElement('td');
-    yearCell.innerHTML = year;
-    const managerCell = document.createElement('td');
-    managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
-    row.appendChild(yearCell);
-    row.appendChild(managerCell);
-    sackoTable.getElementsByTagName('tbody')[0].appendChild(row);
-  })
+  sackoTable.innerHTML = "";
+  if(years.length > 0) {
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const managerHeader = document.createElement('th');
+    managerHeader.innerHTML = 'Manager';
+    const yearHeader = document.createElement('th');
+    yearHeader.innerHTML = 'Year';
+    const tbody = document.createElement('tbody');
+    tr.appendChild(yearHeader);
+    tr.appendChild(managerHeader);
+    thead.appendChild(tr);
+    sackoTable.appendChild(thead);
+    sackoTable.appendChild(tbody);
+    years.forEach((year) => {
+      const row = document.createElement('tr');
+      const yearCell = document.createElement('td');
+      yearCell.innerHTML = year;
+      const managerCell = document.createElement('td');
+      managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
+      row.appendChild(yearCell);
+      row.appendChild(managerCell);
+      sackoTable.getElementsByTagName('tbody')[0].appendChild(row);
+    })
+  } else {
+    sackoTable.innerHTML = "<div><span>No matchup data has been uploaded to the database, please come back after having uploaded at least one weekly matchup.</span></div>";
+  }
+
   let tableHeight = window.getComputedStyle(sackoTable).getPropertyValue('height');
   const newHeight = parseInt(tableHeight.split('px')[0],10) + 149;
   leaderBoardOptionsDiv.style['max-height'] = `${newHeight}px`;

@@ -33,7 +33,7 @@ Once this completes, simply hit one of the generate actions to generate a leader
 
 The power ranking action will require more input before rendering.
 
-![Extension Popup](https://i.imgur.com/qHqL35t.png)
+![Extension Popup](https://i.imgur.com/r3zNtQw.png)
 
 
 ## Options

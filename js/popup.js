@@ -419,6 +419,7 @@ enableButtons = () => {
 }
 
 updateDatabase.onclick = (element) => {
+  alert("Warning: Do not close the extension popup while database is updating.")
   disableButtons();
   setTimeout(() => {
     if(lastSync === null) {

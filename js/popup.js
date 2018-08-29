@@ -33,6 +33,8 @@ let currentWeek = null;
 let lastDate = '';
 let previousManager = ''; // for power rankings manager dropdown
 let isOverridePowerRanking = false;
+let lastCreatedTabId = null;
+let htmlBlock = null;
 
 const positions = { QB: "0.0", RB: "2.0", WR: "4.0", TE: "6.0", DST: "16.0", K: "17.0" }
 
@@ -495,31 +497,51 @@ deleteDatabase.onclick = (element) => {
   }
 };
 
-recordBook.onclick = (element) => {
-  const onReady = (htmlBlock) => {
-    chrome.tabs.create({
-      url: chrome.extension.getURL('../html/screenshot.html'),
-      //tabId: tabs[0].id,
-      active: false
+const popupRecordBookListenerFunction = (request, sender, sendResponse) => {
+  if (request.msg === "screen_ready") {
+    chrome.runtime.sendMessage({
+      msg: "something_completed",
+      data: {
+          name: "league_record_book",
+          html: htmlBlock
+      }
     });
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.runtime.sendMessage({
-        msg: "something_completed",
-        data: {
-            name: "league_record_book",
-            html: htmlBlock
-        }
+  }
+}
+
+const createRecordBookTab = () => {
+  chrome.runtime.onMessage.removeListener(popupRecordBookListenerFunction);
+  chrome.runtime.onMessage.addListener(popupRecordBookListenerFunction);
+  chrome.tabs.query({
+      active: true, currentWindow: true
+    }, tabs => {
+      let index = tabs[0].index;
+      chrome.tabs.create({
+        url: chrome.extension.getURL('../html/screenshot.html'),
+        index: index + 1,
+        active: false,
+      }, (tab) => {
+        lastCreatedTabId = tab.id;
       });
     });
+}
+
+recordBook.onclick = (element) => {
+  const onReady = (result) => {
+    htmlBlock = result;
+    if(lastCreatedTabId) {
+      chrome.tabs.remove(lastCreatedTabId, ()=> {
+        createRecordBookTab()
+      })
+    } else {
+      createRecordBookTab();
+    }
   }
 
   var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
   const leagueSettingsMap = getLeagueSettings(yearList, leagueId);
   mergeDataIntoRecordBook(leagueDatabase.webdb.db, positions, leagueSettingsMap, leagueLocalStorage, onReady);
 };
-
-let lastCreatedTabId = null;
-let htmlBlock = null;
 
 const popupListenerFunction = (request, sender, sendResponse) => {
   if (request.msg === "screen_ready") {

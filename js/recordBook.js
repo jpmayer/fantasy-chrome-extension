@@ -380,7 +380,7 @@ const getMostPointsGame = (db, callback) => {
                           });
                           getMostPointsPlayerSeason(db, playerPositions[pos], leagueSettings, function(resultMPPS){
                             records["mostPointsPlayerSeason-"+pos] = resultMPPS;
-                            if (pos === "K"){ console.log(records);callback(generateRecordBookHTML(records)); }
+                            if (pos === "K"){ callback(generateRecordBookHTML(records)); }
                           });
                         });
                       });

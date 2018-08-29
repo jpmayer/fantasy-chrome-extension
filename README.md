@@ -69,3 +69,4 @@ You can find more examples in the [wiki](https://github.com/jpmayer/fantasy-chro
 
 #### ****Record Book****
 
+![Record Book](https://i.imgur.com/npV6jW5.png)

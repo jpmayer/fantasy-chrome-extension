@@ -1,0 +1,147 @@
+#powerRanking {
+  width:100%;
+  position:relative;
+  margin-left:auto;
+  margin-right:auto;
+  border: 1px solid white;
+  border-radius: 3px;font:normal 10px verdana;
+}
+#powerRanking table {
+  border:0px solid black;
+  font-size:12px;
+  width:100%;
+  border-collapse: collapse;
+}
+#powerRanking table tr {
+  background-color:#F8F8F2;
+}
+#powerRanking table tr:nth-child(odd){
+  background-color:#F2F2E8;
+}
+#powerRanking table tr:nth-child(2) {
+  background-color:#6DBB75;
+}
+#powerRanking table tr:first-child {
+  width:500px;
+  background-color:#1D7225;
+  color:white;
+  text-align:center;
+}
+th {
+  border-radius: 3px 3px 0px 0px;
+}
+#powerRanking table th h3{
+  margin:0px;
+}
+tr.rank {
+  height: 60px;
+  vertical-align: middle;
+}
+tr.rank td:first-child {
+  font-size: 20px;
+  text-align: center;
+  vertical-align: middle;
+  width: 10%;
+}
+.ranking {
+  border-radius: 50px;
+  color: white;
+  padding: 0px;
+  margin: auto;
+}
+tr.rank td:nth-child(2) {
+  width: 100px;
+  vertical-align:middle;
+  text-align: center;
+  display: inline-block;
+}
+tr.rank td:nth-child(3) {
+  width: 10%;
+  vertical-align: middle;
+}
+tr.rank td:nth-child(4) {
+  width: 15%;
+  vertical-align: middle;
+}
+tr.rank td:nth-child(5) {
+  width: 55%;
+  vertical-align: middle;
+  font-size: 10px;padding-left:5px;padding-right:5px;
+}
+.teamPicture img{
+  position: relative;
+  max-width: 65px;
+  height: 55px;
+  vertical-align: middle;
+  object-fit: cover; border-radius: 10px;
+}
+.manager-name {
+ font-size: 13px;white-space: nowrap;top: -5px;position: relative;
+}
+.manager-name a {
+  text-decoration: none !important;
+  color: #225DB7 !important;
+}
+.team-record {
+  color: #888;
+}
+.up {
+  border-bottom: 8px solid green;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  width: 0px;
+  position: relative;
+  left: 17px;
+  top: 6px;
+}
+.down {
+  border-top: 8px solid red;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  width: 0px;
+  position: relative;
+  top: 7px;
+  left: 17px;
+}
+.no-change {
+  border-top: 8px solid transparent;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+.delta-div {
+  position: relative; right: -5px;
+}
+.delta {
+  width: 25px;
+  position: relative;
+  font-size: 17px;
+  line-height: 20px;
+  top: -9px;
+  left: 26px;
+}
+.delta-up {
+  color: green;
+}
+.delta-down {
+  color: red;
+}
+.last-weeks-position {
+  color: #888;
+  font-size: 10px;
+  top: -5px;
+  position: relative;
+}
+.center{
+  text-align:center;
+}
+.manager-name-under-team {
+  font-size: 10px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  white-space:nowrap;
+}
+.team-name {
+  white-space:nowrap;
+  font-weight: bold;
+  font-size: 11px;
+}

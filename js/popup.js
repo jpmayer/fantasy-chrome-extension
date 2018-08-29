@@ -52,12 +52,13 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
           tabs[0].id,
           {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
           (firstYearResults) => {
-            firstYear = firstYearResults[0];
+            firstYear = (firstYearResults[0]) ? firstYearResults[0] : leagueInfo.seasonId;
             chrome.tabs.executeScript(
               tabs[0].id,
               {code: 'document.getElementById("seasonHistoryMenu").value;'},
-              (selecteYearResults) => {
-                selectedYear = selecteYearResults[0];
+              (selectedYearResults) => {
+                selectedYear = leagueInfo.seasonId; //selectedYearResults[0];
+                // TODO if selectedYearResults and it does not equal selectedYear = disable update db button
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${selectedYear}&matchupPeriodId=1`, false);
                 xhr.send();
@@ -98,9 +99,9 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
                     if(data[dbName]) {
                       lastSync = data[dbName].lastSync;
                       leagueLocalStorage = data[dbName];
-                      // generate power ranking table
-                      populatePowerRankings();
                     }
+                    // generate power ranking table
+                    populatePowerRankings();
                     //set last sync display time
                     syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
                   });
@@ -142,7 +143,7 @@ const generatePRManagerDropdown = (place, selectedTeam) => {
       let managerOption = document.createElement('option');
       let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
       managerOption.setAttribute('value', oName);
-      managerOption.innerHTML = (leagueLocalStorage.managerMap[oName]) ? leagueLocalStorage.managerMap[oName] : oName;
+      managerOption.innerHTML = (leagueLocalStorage.managerMap && leagueLocalStorage.managerMap[oName]) ? leagueLocalStorage.managerMap[oName] : oName;
       if(oName === selectedTeam) {
         managerOption.setAttribute('selected', 'selected');
       }
@@ -399,7 +400,7 @@ disableButtons = () => {
     buttons[b].setAttribute('disabled','disabled');
   }
   databaseInfo.style.display = 'none';
-  loadingDiv.innerHTML = 'Loading...';
+  loadingDiv.innerHTML = 'Preparing SQL Statements...';
   loadingDiv.style.display = 'inline-block';
 }
 
@@ -443,9 +444,33 @@ deleteDatabase.onclick = (element) => {
   let shouldDelete = confirm('Are you sure you want to delete the data from your database?');
 
   if(shouldDelete) {
-    try {
-      leagueDatabase.webdb.db.transaction((tx) => {
-        tx.executeSql("DROP TABLE IF EXISTS rankings",[],() => {
+    let shouldDeleteRankings = confirm('Would you like to clear the Power Rankings database as well? \n(Cancel will delete only the rankings and history tables)');
+    if(shouldDeleteRankings) {
+      try {
+        leagueDatabase.webdb.db.transaction((tx) => {
+          tx.executeSql("DROP TABLE IF EXISTS rankings",[],() => {
+            tx.executeSql("DROP TABLE IF EXISTS matchups",[],() => {
+              tx.executeSql("DROP TABLE IF EXISTS history",[],() => {
+                leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
+                delete leagueNameMap[leagueName];
+                let saveState = {'leagueDBNames': leagueDBNames, 'leagueNameMap': leagueNameMap};
+                leagueLocalStorage.lastSync = null;
+                saveState[dbName] = leagueLocalStorage;
+                chrome.storage.sync.set(saveState, () => {
+                  alert('Database deletion complete');
+                  lastSync = null;
+                  syncText.innerHTML = 'Never';
+                });
+              }, errorHandler);
+            }, errorHandler);
+          }, errorHandler);
+        });
+      } catch(e) {
+        alert('Database deletion failed. Please try again');
+      }
+    } else {
+      try {
+        leagueDatabase.webdb.db.transaction((tx) => {
           tx.executeSql("DROP TABLE IF EXISTS matchups",[],() => {
             tx.executeSql("DROP TABLE IF EXISTS history",[],() => {
               leagueDBNames.splice(leagueDBNames.indexOf(dbName), 1);
@@ -460,10 +485,10 @@ deleteDatabase.onclick = (element) => {
               });
             }, errorHandler);
           }, errorHandler);
-        }, errorHandler);
-      });
-    } catch(e) {
-      alert('Database deletion failed. Please try again');
+        });
+      } catch(e) {
+        alert('Database deletion failed. Please try again');
+      }
     }
   }
 };
@@ -499,40 +524,70 @@ recordBook.onclick = (element) => {
   });
 };
 
-allTimeWins.onclick = (element) => {
-  const onReady = (htmlBlock) => {
-    chrome.tabs.create({
-      url: chrome.extension.getURL('../html/screenshot.html'),
-      //tabId: tabs[0].id,
-      active: false
+let lastCreatedTabId = null;
+let htmlBlock = null;
+
+const popupListenerFunction = (request, sender, sendResponse) => {
+  if (request.msg === "screen_ready") {
+    chrome.runtime.sendMessage({
+      msg: "something_completed",
+      data: {
+          name: "league_all_time_wins",
+          html: htmlBlock
+      }
     });
-    setTimeout(() => {
-      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.runtime.sendMessage({
-          msg: "something_completed",
-          data: {
-            name: "league_all_time_wins",
-            html: htmlBlock
-          }
-        });
+  }
+}
+
+const createLeaderBoardTab = () => {
+  chrome.runtime.onMessage.removeListener(popupListenerFunction);
+  chrome.runtime.onMessage.addListener(popupListenerFunction);
+  chrome.tabs.query({
+      active: true, currentWindow: true
+    }, tabs => {
+      let index = tabs[0].index;
+      chrome.tabs.create({
+        url: chrome.extension.getURL('../html/screenshot.html'),
+        index: index + 1,
+        active: false,
+      }, (tab) => {
+        lastCreatedTabId = tab.id;
       });
-    }, 100);
+    });
+}
+
+allTimeWins.onclick = (element) => {
+  const onReady = (result) => {
+    htmlBlock = result;
+    if(lastCreatedTabId) {
+      chrome.tabs.remove(lastCreatedTabId, ()=> {
+        createLeaderBoardTab()
+      })
+    } else {
+      createLeaderBoardTab();
+    }
+
   }
   getManagers(leagueDatabase.webdb.db, (managerList) => {
-    getRecords(leagueDatabase.webdb.db, managerList, (records) => {
-      getAllManagersPoints(leagueDatabase.webdb.db, managerList, (points) => {
-        var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
-        const leagueSettingsMap = getLeagueSettings(yearList, leagueId);
-        getChampionships(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (champions) => {
-          getSackos(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (sackos) => {
-            getAllManagersPlayoffAppearences(leagueDatabase.webdb.db, managerList, yearList, leagueSettingsMap, (playoffApps) => {
-              const mergedRecords = mergeDataIntoRecords(records, sackos, champions, playoffApps, points);
-              getAllTimeLeaderBoard(mergedRecords, leagueSettingsMap[yearList[0]], onReady);
-            });
+    if(managerList.length === 0) {
+      // no data in database
+      alert('No matchups saved in the database, cannot generate leader board without matchup data. Please upload the database with at least one matchup before attempting again.');
+    } else {
+      getRecords(leagueDatabase.webdb.db, managerList, (records) => {
+        getAllManagersPoints(leagueDatabase.webdb.db, managerList, (points) => {
+          var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
+          const leagueSettingsMap = getLeagueSettings(yearList, leagueId);
+          getChampionships(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (champions) => {
+            getSackos(leagueDatabase.webdb.db, yearList, leagueSettingsMap, (sackos) => {
+              getAllManagersPlayoffAppearences(leagueDatabase.webdb.db, managerList, yearList, leagueSettingsMap, (playoffApps) => {
+                const mergedRecords = mergeDataIntoRecords(records, sackos, champions, playoffApps, points);
+                getAllTimeLeaderBoard(mergedRecords, leagueSettingsMap[yearList[0]], onReady);
+              });
+            })
           })
         })
       })
-    })
+    }
   });
 }
 
@@ -580,24 +635,45 @@ powerRankings.onclick = (element) => {
   }
 }
 
-const powerRankingClickFunction = (element) => {
-  const onReady = (htmlBlock) => {
-    chrome.tabs.create({
-      url: chrome.extension.getURL('../html/screenshot.html'),
-      //tabId: tabs[0].id,
-      active: false
+const popupPRListenerFunction = (request, sender, sendResponse) => {
+  if (request.msg === "screen_ready") {
+    chrome.runtime.sendMessage({
+      msg: "something_completed",
+      data: {
+        name: "power_ranking",
+        html: htmlBlock
+      }
     });
-    setTimeout(() => {
-      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.runtime.sendMessage({
-          msg: "something_completed",
-          data: {
-            name: "power_ranking",
-            html: htmlBlock
-          }
-        });
+  }
+}
+
+const createPowerRankingTab = () => {
+  chrome.runtime.onMessage.removeListener(popupPRListenerFunction);
+  chrome.runtime.onMessage.addListener(popupPRListenerFunction);
+  chrome.tabs.query({
+      active: true, currentWindow: true
+    }, tabs => {
+      let index = tabs[0].index;
+      chrome.tabs.create({
+        url: chrome.extension.getURL('../html/screenshot.html'),
+        index: index + 1,
+        active: false
+      }, (tab) => {
+        lastCreatedTabId = tab.id;
       });
-    }, 100);
+    });
+}
+
+const powerRankingClickFunction = (element) => {
+  const onReady = (result) => {
+    htmlBlock = result;
+    if(lastCreatedTabId) {
+      chrome.tabs.remove(lastCreatedTabId, () => {
+        createPowerRankingTab()
+      })
+    } else {
+      createPowerRankingTab();
+    }
   }
 
   leagueDatabase.webdb.db.transaction((tx) => {

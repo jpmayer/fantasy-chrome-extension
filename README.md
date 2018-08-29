@@ -31,7 +31,7 @@ To get your league setup, simply click the "Update" button to pull your league's
 
 Once this completes, simply hit one of the generate actions to generate a leader board, record book or power ranking image for your league.
 
-The power ranking action will require more input before rendering.
+The power ranking action has an input form to fill out before rendering, you can change the position of the managers and give them a weekly comment blurb. (The power rankings are fully manual, the default listing is the original order in which the managers joined the league as returned by ESPN API)
 
 ![Extension Popup](https://i.imgur.com/MwYjdeo.png) ![Filled In](https://i.imgur.com/o23FTDe.png)
 

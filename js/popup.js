@@ -310,42 +310,25 @@ deleteDatabase.onclick = (element) => {
 
 recordBook.onclick = (element) => {
   const onReady = (htmlBlock) => {
-    console.log(htmlBlock);
+    chrome.tabs.create({
+      url: chrome.extension.getURL('../html/screenshot.html'),
+      //tabId: tabs[0].id,
+      active: false
+    });
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.runtime.sendMessage({
+        msg: "something_completed",
+        data: {
+            name: "league_record_book",
+            html: htmlBlock
+        }
+      });
+    });
   }
 
   var yearList = yearRangeGenerator(parseInt(firstYear,10),parseInt(currentYear,10));
   const leagueSettingsMap = getLeagueSettings(yearList, leagueId);
-  mergeDataIntoRecordBook(leagueDatabase.webdb.db, positions, leagueSettingsMap, leagueLocalStorage, (results) => {
-    console.log(results);
-    
-  });
-
-  // chrome.windows.create({
-  //   url: chrome.extension.getURL('../html/screenshot.html'),
-  //   //tabId: tabs[0].id,
-  //   type: 'popup',
-  //   focused: true
-  // });
-
-  // chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-  //   chrome.tabs.executeScript(
-  //     tabs[0].id,
-  //     { file: "screenshot.js" },
-  //     () => {
-  //       if (tabs[0].incognito) {
-  //         return;
-  //       } else {
-  //         chrome.runtime.sendMessage({
-  //           msg: "something_completed",
-  //           data: {
-  //               name: "league_record_book",
-  //               html: htmlBlock
-  //           }
-  //       });
-  //       }
-  //     }
-  //   );
-  // });
+  mergeDataIntoRecordBook(leagueDatabase.webdb.db, positions, leagueSettingsMap, leagueLocalStorage, onReady);
 };
 
 allTimeWins.onclick = (element) => {

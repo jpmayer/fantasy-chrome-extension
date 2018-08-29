@@ -27,16 +27,16 @@ const getMostPointsGame = (db, callback) => {
                   var key = rs.rows[i].manager + "-" + rs.rows[i].year;
                   if (scoreMap.has(key)) {
                     var old = scoreMap.get(key);
-                    scoreMap.set(key, parseInt(old) + parseInt(rs.rows[i].score));
+                    scoreMap.set(key, parseFloat(old) + parseFloat(rs.rows[i].score));
                   } else {
-                    scoreMap.set(key, parseInt(rs.rows[i].score));
+                    scoreMap.set(key, parseFloat(rs.rows[i].score));
                   }
                 }
               }
               var maxEntry = { score: -Infinity };
               for(let [k, v] of scoreMap){
-                if(maxEntry.score < parseInt(v)){
-                    maxEntry.score = parseInt(v);
+                if(maxEntry.score < parseFloat(v)){
+                    maxEntry.score = parseFloat(v);
                     maxEntry.manager = k.split("-")[0];
                     maxEntry.year = k.split("-")[1];
                 }
@@ -90,16 +90,16 @@ const getMostPointsGame = (db, callback) => {
                   var key = rs.rows[i].manager + "-" + rs.rows[i].year;
                   if (scoreMap.has(key)) {
                     var old = scoreMap.get(key);
-                    scoreMap.set(key, parseInt(old) + parseInt(rs.rows[i].score));
+                    scoreMap.set(key, parseFloat(old) + parseFloat(rs.rows[i].score));
                   } else {
-                    scoreMap.set(key, parseInt(rs.rows[i].score));
+                    scoreMap.set(key, parseFloat(rs.rows[i].score));
                   }
                 }
               }
               var minEntry = { score: Infinity };
               for(let [k, v] of scoreMap){
-                if(minEntry.score > parseInt(v)){
-                    minEntry.score = parseInt(v);
+                if(minEntry.score > parseFloat(v)){
+                    minEntry.score = parseFloat(v);
                     minEntry.manager = k.split("-")[0];
                     minEntry.year = k.split("-")[1];
                 }
@@ -139,18 +139,18 @@ const getMostPointsGame = (db, callback) => {
                   var key = rs.rows[i].vs + "-" + rs.rows[i].year;
                   if (scoreMap.has(key)) {
                     var old = scoreMap.get(key);
-                    var entry = { vs: old.vs, year: old.year, totalPoints: parseInt(old.totalPoints) + parseInt(rs.rows[i].score) }
+                    var entry = { vs: old.vs, year: old.year, totalPoints: parseFloat(old.totalPoints) + parseFloat(rs.rows[i].score) }
                     scoreMap.set(key, entry);
                   } else {
-                    var entry = { vs: rs.rows[i].vs, year: rs.rows[i].year, totalPoints: parseInt(rs.rows[i].score) }
+                    var entry = { vs: rs.rows[i].vs, year: rs.rows[i].year, totalPoints: parseFloat(rs.rows[i].score) }
                     scoreMap.set(key, entry);
                   }
                 }
               }
               var maxEntry = { totalPoints: -Infinity };
               for(let [k, v] of scoreMap){
-                if(maxEntry.totalPoints < parseInt(v.totalPoints)){
-                    maxEntry.totalPoints = parseInt(v.totalPoints);
+                if(maxEntry.totalPoints < parseFloat(v.totalPoints)){
+                    maxEntry.totalPoints = parseFloat(v.totalPoints);
                     maxEntry.vs = v.vs;
                     maxEntry.year = v.year;
                 }
@@ -176,11 +176,11 @@ const getMostPointsGame = (db, callback) => {
                   var key = rs.rows[i].vs + "-" + rs.rows[i].year;
                   if (scoreMap.has(key)) {
                     var old = scoreMap.get(key);
-                    var entry = { vs: old.vs, year: old.year, totalPoints: parseInt(old.totalPoints)
-                         + parseInt(rs.rows[i].score), numGames: parseInt(old.numGames) + 1}
+                    var entry = { vs: old.vs, year: old.year, totalPoints: parseFloat(old.totalPoints)
+                         + parseFloat(rs.rows[i].score), numGames: old.numGames + 1}
                     scoreMap.set(key, entry);
                   } else {
-                    var entry = { vs: rs.rows[i].vs, year: rs.rows[i].year, totalPoints: parseInt(rs.rows[i].score), numGames: 1 }
+                    var entry = { vs: rs.rows[i].vs, year: rs.rows[i].year, totalPoints: parseFloat(rs.rows[i].score), numGames: 1 }
                     scoreMap.set(key, entry);
                   }
                 }
@@ -188,8 +188,8 @@ const getMostPointsGame = (db, callback) => {
               var minEntry = { totalPoints: 9999 };
               for(let [k, v] of scoreMap){
                 if (v.numGames == leagueSettings[v.year].finalRegularSeasonMatchupPeriodId){
-                  if(parseInt(v.totalPoints) < parseInt(minEntry.totalPoints)){
-                    minEntry.totalPoints = parseInt(v.totalPoints);
+                  if(parseFloat(v.totalPoints) < parseFloat(minEntry.totalPoints)){
+                    minEntry.totalPoints = parseFloat(v.totalPoints);
                     minEntry.numGames = leagueSettings[v.year].finalRegularSeasonMatchupPeriodId;
                     minEntry.vs = v.vs;
                     minEntry.year = v.year;
@@ -331,16 +331,16 @@ const getMostPointsGame = (db, callback) => {
                     var key = rs.rows[i].player + "-" + rs.rows[i].year;
                     if(scoreMap.has(key)) {
                       var old = scoreMap.get(key);
-                      scoreMap.set(key, parseInt(old) + parseInt(rs.rows[i].score));
+                      scoreMap.set(key, parseFloat(old) + parseFloat(rs.rows[i].score));
                     } else {
-                      scoreMap.set(key, parseInt(rs.rows[i].score));
+                      scoreMap.set(key, parseFloat(rs.rows[i].score));
                     }
                   }
                 }
                 var maxEntry = { score: 0 };
                 for(let [k, v] of scoreMap){
-                  if(parseInt(maxEntry.score) < parseInt(v)){
-                      maxEntry.score = parseInt(v);
+                  if(parseFloat(maxEntry.score) < parseFloat(v)){
+                      maxEntry.score = parseFloat(v);
                       maxEntry.player = k.split("-")[0];
                       maxEntry.year = k.split("-")[1];
                   }
@@ -380,7 +380,12 @@ const getMostPointsGame = (db, callback) => {
                           });
                           getMostPointsPlayerSeason(db, playerPositions[pos], leagueSettings, function(resultMPPS){
                             records["mostPointsPlayerSeason-"+pos] = resultMPPS;
-                            if (pos === "K"){ callback(generateRecordBookHTML(records)); }
+                            if (pos === "K"){
+                              chrome.storage.sync.get(['league-' + leagueId], (response) => {
+                                const leagueDict = (response['league-' + leagueId]) ? response['league-' + leagueId] : {};
+                                callback(generateRecordBookHTML(records, leagueDict));
+                              });
+                            }
                           });
                         });
                       });
@@ -395,10 +400,22 @@ const getMostPointsGame = (db, callback) => {
     });
   }
 
-  const generateRecordBookHTML = (records) => {
+  const getManagerName = (manager, managerMap) => {
+    return (managerMap[manager]) ? managerMap[manager] : manager;
+  }
 
-    mostMatchupString = records["mostPointsMatchup"].manager + " ("+records["mostPointsMatchup"].score+") vs " + records["mostPointsMatchup"].vs +" ("+parseInt(records["mostPointsMatchup"].matchupTotal-records["mostPointsMatchup"].score)+")";
-    fewestMatchupString = records["fewestPointsMatchup"].manager + " ("+records["fewestPointsMatchup"].score+") vs " + records["fewestPointsMatchup"].vs +" ("+parseInt(records["fewestPointsMatchup"].matchupTotal-records["fewestPointsMatchup"].score)+")";
+  const roundScore = (score) => {
+    if(score % 1 === 0) {
+      return score;
+    } else {
+      return score.toFixed(2);
+    }
+  }
+
+  const generateRecordBookHTML = (records, leagueDict) => {
+
+    mostMatchupString = getManagerName(records["mostPointsMatchup"].manager, leagueDict.managerMap) + " ("+roundScore(records["mostPointsMatchup"].score)+") vs " + getManagerName(records["mostPointsMatchup"].vs, leagueDict.managerMap) +" ("+roundScore(parseFloat(records["mostPointsMatchup"].matchupTotal-records["mostPointsMatchup"].score))+")";
+    fewestMatchupString = getManagerName(records["fewestPointsMatchup"].manager, leagueDict.managerMap) + " ("+roundScore(records["fewestPointsMatchup"].score)+") vs " + getManagerName(records["fewestPointsMatchup"].vs, leagueDict.managerMap) +" ("+roundScore(parseFloat(records["fewestPointsMatchup"].matchupTotal-records["fewestPointsMatchup"].score))+")";
 
     resultString = "<div id='recordBook'>"
     resultString = resultString + "<table>"
@@ -406,28 +423,28 @@ const getMostPointsGame = (db, callback) => {
     resultString = resultString + "<th colspan='3'><h3>League Record Book</h3></th>"
     resultString = resultString + "</tr>"
     resultString = resultString + "<tr> <td class='column1'><b>Category</b></td><td class='column2'><b>Record</b></td><td class='column3'><b>Holder</b></td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points (Game) </td><td class='center odd'>" + records["mostPointsGame"].score + "</td><td class='center odd'>" + records["mostPointsGame"].manager + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points (Season) </td><td class='center even'>" + records["mostPointsSeason"].score + "</td><td class='center even'>" + records["mostPointsSeason"].manager + " - " + records["mostPointsSeason"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points (Matchup) </td><td class='center odd'>" + records["mostPointsMatchup"].score + "</td><td class='center odd'>" + mostMatchupString + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (G) </td><td class='center even'>" + records["fewestPointsGame"].score + "</td><td class='center even'>" + records["fewestPointsGame"].manager + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Fewest Points (S) </td><td class='center odd'>" + records["fewestPointsSeason"].score + "</td><td class='center odd'>" + records["fewestPointsSeason"].manager + " - " + records["fewestPointsSeason"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (M) </td><td class='center even'>" + records["fewestPointsMatchup"].matchupTotal + "</td><td class='center even'>" + fewestMatchupString + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points Allowed (S) </td><td class='center even'>" + records["mostPointsAllowedSeason"].totalPoints + "</td><td class='center even'>" + records["mostPointsAllowedSeason"].vs + " - " + records["mostPointsAllowedSeason"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points Allowed (S) </td><td class='center even'>" + records["fewestPointsAllowedSeason"].totalPoints + "</td><td class='center even'>" + records["fewestPointsAllowedSeason"].vs + " - " + records["fewestPointsAllowedSeason"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Longest Win Streak </td><td class='center odd'>" + records["winStreak"].games.length + "</td><td class='center odd'>" + records["winStreak"].manager + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Longest Losing Streak </td><td class='center even'>" + records["winStreak"].games.length + "</td><td class='center even'>" + records["loseStreak"].manager + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-QB (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-QB"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-QB"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-QB (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-QB"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-QB"].player + " - " + records["mostPointsPlayerSeason-QB"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-RB (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-RB"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-RB"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-RB (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-RB"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-RB"].player + " - " + records["mostPointsPlayerSeason-RB"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-WR (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-WR"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-WR"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-WR (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-WR"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-WR"].player + " - " + records["mostPointsPlayerSeason-WR"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-TE (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-TE"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-TE"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-TE (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-TE"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-TE"].player + " - " + records["mostPointsPlayerSeason-TE"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-D/ST (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-DST"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-DST"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-D/ST (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-DST"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-DST"].player + " - " + records["mostPointsPlayerSeason-DST"].year + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-K (G) </td><td class='center odd'>" + records["mostPointsPlayerGame-K"].score + "</td><td class='center odd'>" + records["mostPointsPlayerGame-K"].player + "</td></tr>"
-    resultString = resultString + "<tr> <td class='recordType even'>Most Points-K (S) </td><td class='center even'>" + records["mostPointsPlayerSeason-K"].score + "</td><td class='center even'>" + records["mostPointsPlayerSeason-K"].player + " - " + records["mostPointsPlayerSeason-K"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points (Game) </td><td class='center odd'>" + roundScore(records["mostPointsGame"].score) + "</td><td class='center odd'>" + getManagerName(records["mostPointsGame"].manager, leagueDict.managerMap) + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points (Season) </td><td class='center even'>" + roundScore(records["mostPointsSeason"].score) + "</td><td class='center even'>" + getManagerName(records["mostPointsSeason"].manager, leagueDict.managerMap) + " - " + records["mostPointsSeason"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points (Matchup) </td><td class='center odd'>" + roundScore(records["mostPointsMatchup"].matchupTotal) + "</td><td class='center odd'>" + mostMatchupString + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (G) </td><td class='center even'>" + roundScore(records["fewestPointsGame"].score) + "</td><td class='center even'>" + getManagerName(records["fewestPointsGame"].manager, leagueDict.managerMap) + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Fewest Points (S) </td><td class='center odd'>" + roundScore(records["fewestPointsSeason"].score) + "</td><td class='center odd'>" + getManagerName(records["fewestPointsSeason"].manager, leagueDict.managerMap) + " - " + records["fewestPointsSeason"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (M) </td><td class='center even'>" + roundScore(records["fewestPointsMatchup"].matchupTotal) + "</td><td class='center even'>" + fewestMatchupString + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points Allowed (S) </td><td class='center even'>" + roundScore(records["mostPointsAllowedSeason"].totalPoints) + "</td><td class='center even'>" + getManagerName(records["mostPointsAllowedSeason"].vs, leagueDict.managerMap) + " - " + records["mostPointsAllowedSeason"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Fewest Points Allowed (S) </td><td class='center even'>" + roundScore(records["fewestPointsAllowedSeason"].totalPoints) + "</td><td class='center even'>" + getManagerName(records["fewestPointsAllowedSeason"].vs, leagueDict.managerMap) + " - " + records["fewestPointsAllowedSeason"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Longest Win Streak </td><td class='center odd'>" + records["winStreak"].games.length + "</td><td class='center odd'>" + getManagerName(records["winStreak"].manager, leagueDict.managerMap) + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Longest Losing Streak </td><td class='center even'>" + records["winStreak"].games.length + "</td><td class='center even'>" + getManagerName(records["loseStreak"].manager, leagueDict.managerMap) + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-QB (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-QB"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-QB"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-QB (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-QB"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-QB"].player + " - " + records["mostPointsPlayerSeason-QB"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-RB (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-RB"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-RB"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-RB (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-RB"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-RB"].player + " - " + records["mostPointsPlayerSeason-RB"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-WR (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-WR"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-WR"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-WR (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-WR"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-WR"].player + " - " + records["mostPointsPlayerSeason-WR"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-TE (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-TE"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-TE"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-TE (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-TE"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-TE"].player + " - " + records["mostPointsPlayerSeason-TE"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-D/ST (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-DST"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-DST"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-D/ST (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-DST"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-DST"].player + " - " + records["mostPointsPlayerSeason-DST"].year + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType odd'>Most Points-K (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-K"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-K"].player + "</td></tr>"
+    resultString = resultString + "<tr> <td class='recordType even'>Most Points-K (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-K"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-K"].player + " - " + records["mostPointsPlayerSeason-K"].year + "</td></tr>"
     resultString = resultString + "</table></div>"
 
     return resultString;

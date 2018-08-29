@@ -53,3 +53,19 @@ Click "Details". Then find and select "Extension options"
 Here you can add in old league records, update manager display names, and set some other personal league options. These are all completely optional and are here to provide a more personal experience. The options are per league and can only be set on leagues who have a database stored in local storage (see the Usage section)
 
 ![Options](https://i.imgur.com/u47UAUU.png)
+
+
+## Example Output
+
+You can find more examples in the [wiki](https://github.com/jpmayer/fantasy-chrome-extension/wiki/Example-Gallery)
+
+#### ****Power Ranking****
+
+![Power Rankings](https://i.imgur.com/k1CSiCb.png)
+
+#### ****Leader Board****
+
+![Leader Board](https://i.imgur.com/lL5wIC6.png)
+
+#### ****Record Book****
+

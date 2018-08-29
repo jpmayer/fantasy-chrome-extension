@@ -1,5 +1,9 @@
-# fantasy-chrome-extension
+# LM Note Generator For ESPN Fantasy Football
 Creates LM Note content for a public ESPN Fantasy Football League.
+
+## Documentation
+
+[Wiki](https://github.com/jpmayer/fantasy-chrome-extension/wiki)
 
 ## Installation
 
@@ -29,7 +33,14 @@ Once this completes, simply hit one of the generate actions to generate a leader
 
 The power ranking action will require more input before rendering.
 
+![Extension Popup](https://i.imgur.com/r3zNtQw.png)
+
+
 ## Options
+
+Right click the extension icon in the browser toolbar and click 'Options'
+
+Or
 
 Navigate to
 
@@ -40,3 +51,5 @@ Find the ESPN LM Note Builder extension in the list.
 Click "Details". Then find and select "Extension options"
 
 Here you can add in old league records, update manager display names, and set some other personal league options. These are all completely optional and are here to provide a more personal experience. The options are per league and can only be set on leagues who have a database stored in local storage (see the Usage section)
+
+![Options](https://i.imgur.com/u47UAUU.png)

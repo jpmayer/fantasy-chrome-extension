@@ -1,131 +1,48 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-      .options-container {
-        width: 500px;
-      }
-      .header {
-        height: 22px;
-        background-color: #1D7225;
-        color: white;
-        font-size: 16px;
-        padding: 5px;
-        border-radius: 4px 4px 0px 0px;
-        margin-bottom: 1px;
-        line-height: 22px;
-        text-align: center;
-      }
-      .container {
-        background-color: #F2F2E8;
-        color: black;
-      }
-      .container-row {
-        padding: 0px;
-        max-height: 0px;
-        overflow: hidden;
-        transition: max-height .25s linear;
-      }
-      table {
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-        padding: 5px;
-      }
-      th.label-header {
-        text-align: right;
-        width: 140px;
-      }
-      tr td:first-child {
-        text-align: right;
-      }
-      td input[type="number"] {
-        width: 50px;
-        margin-left: 5px;
-      }
-      td input {
-        text-align: center;
-        width: 100%;
-      }
-      .sub-header {
-        height: 16px;
-        background-color: #6DBB75;
-        color: white;
-        font-size: 12px;
-        padding: 5px;
-        user-select: none;
-        margin-bottom: 1px;
-      }
-      .category.active > .container-row {
-        max-height: 300px;
-        padding: 5px;
-      }
-      .category.active > .sub-header {
-        margin-bottom: 0px;
-        background: #1D7225;
-      }
-      .category > .sub-header {
-        cursor: pointer;
-      }
-      .button-container {
-        text-align: right;
-        margin-top: 0px;
-        height: 22px;
-        background-color: #1D7225;
-        color: white;
-        padding: 5px;
-        border-radius: 0px 0px 4px 4px;
-        line-height: 22px;
-      }
-      #league-selector {
-        display: inline-block;
-      }
-      .category .accordian-icon::before {
-        content: "+";
-      }
-      .category.active .accordian-icon::before {
-        content: "-";
-      }
-      table#sacko-override tr td select{
-        width: 100%;
-      }
-      table#sacko-override tr td {
-        text-align: center;
-      }
-      .leader-board-options td input {
-        text-align: center;
-        width: 90%;
-        margin-left: 5%;
-      }
-      .leader-board-options td input[type="checkbox"] {
-        text-align: left;
-        text-indent: 20px;
-        line-height: 12px;
-      }
-      .leader-board-options td input[type="checkbox"]::before {
-        content: 'DISABLED';
-      }
-      .leader-board-options td input[type="checkbox"]:checked::before {
-        content: 'ENABLED';
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="../css/options.css">
   </head>
   <body>
     <div>
       <div class="options-container">
         <div class="header">
           ESPN Fantasy Football League Note Generator Options
-
         </div>
         <div id="container-body">
           <div class="sub-header" style="text-align: right;">
             League: <select id="league-selector"></select>
           </div>
-          <div class="container category active">
+          <div class="container category">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Manager Options
+            </div>
+            <div class="container-row manager-options" id="manager-options">
+              <table id="manager-override"><tbody><thead><tr><th style="text-align:right;">Manager</th><th>Alias</th></tr></thead></tbody></table>
+            </div>
+          </div>
+          <div class="container category inactive">
+            <div class="sub-header">
+              <span class="accordian-icon" /> Leader Board Options
+            </div>
+            <div class="container-row leader-board-options" id="leader-board-options">
+              <table>
+                <tr><td>Track Losers' Bracket Games: </td><td><input type="checkbox" id="losers-show"></td></tr>
+                <tr><td>Track 3rd Place Game: </td><td><input type="checkbox" id="3rd-show"></td></tr>
+                <tr><td>Collapse Icons: </td><td><input type="checkbox" id="collapse-icons"></td></tr>
+                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
+                <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
+                <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
+                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><thead><tr><th>Year</th><th>Manager</th></tr></thead><tbody></tbody></table></td></tr>
+              </table>
+            </div>
+            </div>
+          </div>
+          <div class="container category inactive">
             <div class="sub-header">
               <span class="accordian-icon" /> Record Book Options
             </div>
-            <div class="container-row">
+            <div class="container-row" id="record-book-options" style="max-height:305px;">
               <table>
                 <tr>
                   <th class="label-header">Position Record</th>
@@ -147,28 +64,29 @@
               </table>
             </div>
           </div>
-          <div class="container category">
+          <div class="container category inactive">
             <div class="sub-header">
-              <span class="accordian-icon" /> Manager Options
+              <span class="accordian-icon" /> Power Ranking Options
             </div>
-            <div class="container-row">
-              Some form here
+            <div class="container-row" id="power-ranking-options">
+              <table>
+                <tr><td style="width: 42%;">Hide Team Names: </td><td><input type="checkbox" id="team-name-show" /></td></tr>
+                <tr><td>Show Team Pictures: </td><td><input type="checkbox" id="pictures-show" /></td></tr>
+                <tr><td>Manually Override Pictures: </td><td></td></tr>
+              </table>
+              <table id="pictures-override" style="padding-top: 0;"><thead><tr><th style="text-align:right;">Manager</th><th>Image URL</th></tr></thead><tbody></tbody></table>
             </div>
           </div>
-          <div class="container category">
+          <div class="container category inactive">
             <div class="sub-header">
-              <span class="accordian-icon" /> Leader Board Options
+              <span class="accordian-icon" /> Advanced Options
             </div>
-            <div class="container-row leader-board-options">
+            <div class="container-row" id="advanced-options" style="max-height:150px;">
               <table>
-                <tr><td>Track Losers' Bracket Games: </td><td><input type="checkbox" id="losers-show"></td></tr>
-                <tr><td>Track 3rd Place Game: </td><td><input type="checkbox" id="3rd-show"></td></tr>
-                <tr><td>Hide Average Line: </td><td><input type="checkbox" id="acuna-show"></td></tr>
-                <tr><td>Average Line Title: </td><td><input type="text" id="acuna-name" placeholder="The Threshold of Mediocrity" /></td></tr>
-                <tr><td style="width:200px;">Last Place Column Header: </td><td><input type="text" id="sacko-name" placeholder="Sackos" /></td></tr>
-                <tr><td>Manually Override Last Place: </td><td><table id="sacko-override"><tr><th>Year</th><th>Manager</th></tr></table></td></tr>
+                <tr><td style="text-align:left;">Data Manipulation: </td><td></td></tr>
               </table>
-            </div>
+              <textarea id="custom-script" rows="6" cols="75" style="margin-left:8px;" placeholder="Are you sure you want to do this? Database manipulation is only for advanced user. Please make sure you know what you are doing before continuing."></textarea>
+              <button id="script" style="float:right;margin-top:5px;margin-right:8px;">Run Script</button>
             </div>
           </div>
           <div class="button-container">

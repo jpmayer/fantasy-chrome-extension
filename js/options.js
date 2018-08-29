@@ -8,6 +8,9 @@ const leagueDatabase = {};
 leagueDatabase.webdb = {};
 leagueDatabase.webdb.db = null;
 const saveButton = document.getElementById('save');
+const resetButton = document.getElementById('reset');
+const scriptButton = document.getElementById('script');
+const customScript = document.getElementById('custom-script');
 const QBG = document.getElementById('QBG');
 const QBGName = document.getElementById('QBG-Name');
 const QBS= document.getElementById('QBS');
@@ -36,9 +39,21 @@ const KSName = document.getElementById('KS-Name');
 const showLoserCheckbox = document.getElementById('losers-show');
 const show3rdPlaceCheckbox = document.getElementById('3rd-show');
 const hideAverageLineCheckbox = document.getElementById('acuna-show');
+const collapseIconsCheckbox = document.getElementById('collapse-icons');
 const averageLineNameInput = document.getElementById('acuna-name');
 const lastPlaceNameInput = document.getElementById('sacko-name');
+const hideTeamNamesCheckbox = document.getElementById('team-name-show');
+const showPicturesCheckbox = document.getElementById('pictures-show');
 
+const leaderBoardOptionsDiv = document.getElementById('leader-board-options');
+const managerOptionsDiv = document.getElementById('manager-options');
+const recordBoardOptionsDiv = document.getElementById('record-board-options');
+const powerRankingOptionsDiv = document.getElementById('power-ranking-options');
+
+const managerTable = document.getElementById('manager-override');
+const managerTableBody = managerTable.getElementsByTagName( 'tbody' )[0];
+const managerImageTable = document.getElementById('pictures-override');
+const managerImageTableBody = managerImageTable.getElementsByTagName( 'tbody' )[0];
 const sackoTable = document.getElementById('sacko-override');
 
 const errorHandler = (transaction, error) => {
@@ -48,17 +63,21 @@ const errorHandler = (transaction, error) => {
 
 let yearArray = [];
 let managerArray = [];
+let managerYearMap = {};
+let managerImageMap = {};
 let sackoMap = null;
+let managerMap = null;
 let lastSync = null;
 
 for(var h = 0; h < categories.length; h++) {
   ((index) => {
     categories[index].addEventListener("click", () => {
-      if(categories[index].className.indexOf('active') === -1) {
+      if(categories[index].className.indexOf('inactive') > -1) {
         for(var j = 0; j < categories.length; j++) {
-          categories[j].classList.remove('active');
+          categories[j].classList.remove('inactive');
+          categories[j].classList.add('inactive');
         }
-        categories[index].classList.add('active');
+        categories[index].classList.remove('inactive');
       }
     });
   })(h);
@@ -71,6 +90,9 @@ leagueSelector.addEventListener('change', (event) => {
 
 const updateOptionsForLeague = () => {
   yearArray = []; managerArray = [];
+  managerYearMap = {};
+  managerImageMap = {};
+  sackoMap = null; managerMap = null; lastSync = null;
   leagueDatabase.webdb.open = () => {
     var dbSize = 5 * 1024 * 1024; // 5MB
     leagueDatabase.webdb.db = openDatabase((currentLeague), "1", "League Database", dbSize);
@@ -108,13 +130,16 @@ const updateOptionsForLeague = () => {
 
     showLoserCheckbox.checked = (data.trackLosers) ? data.trackLosers : false;
     show3rdPlaceCheckbox.checked = (data.track3rdPlaceGame) ? data.track3rdPlaceGame : false;
-    hideAverageLineCheckbox.checked = (data.hideAverageLine) ? data.hideAverageLine : null;
+    hideAverageLineCheckbox.checked = (data.hideAverageLine) ? data.hideAverageLine : false;
     averageLineNameInput.value = (data.averageLineName) ? data.averageLineName : null;
     lastPlaceNameInput.value = (data.lastPlaceName) ? data.lastPlaceName : null;
+    hideTeamNamesCheckbox.checked = (data.hideTeamNames) ? data.hideTeamNames : false;
+    showPicturesCheckbox.checked = (data.showTeamPictures) ? data.showTeamPictures : false;
+    collapseIconsCheckbox.checked = (data.areIconsCollapsed) ? data.areIconsCollapsed : false;
 
     //get options from database
     const query = 'SELECT DISTINCT year FROM matchups';
-    const query2 = 'SELECT DISTINCT manager FROM matchups';
+    const query2 = 'SELECT DISTINCT manager, year FROM matchups';
     leagueDatabase.webdb.db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -124,10 +149,21 @@ const updateOptionsForLeague = () => {
           tx.executeSql(query2, [],
             (tx, rs2) => {
               for(var m = 0; m < rs2.rows.length; m++) {
-                managerArray.push(rs2.rows[m].manager);
+                if(managerYearMap[rs2.rows[m].year]) {
+                  managerYearMap[rs2.rows[m].year].push(rs2.rows[m].manager);
+                } else {
+                  managerYearMap[rs2.rows[m].year] = [rs2.rows[m].manager];
+                }
+                if(managerArray.indexOf(rs2.rows[m].manager) === -1){
+                  managerArray.push(rs2.rows[m].manager);
+                }
               }
               sackoMap = (data.sackoMap) ? data.sackoMap : {};
-              populateLastPlaceSelection(yearArray, sackoMap, managerArray);
+              managerMap = (data.managerMap) ? data.managerMap : {};
+              managerImageMap = (data.managerImageMap) ? data.managerImageMap : {};
+              populateManagerAlias(managerArray);
+              populateLastPlaceSelection(yearArray, sackoMap, managerYearMap);
+              populateManagerImageOverride(managerArray);
             }, errorHandler);
         }, errorHandler);
       });
@@ -152,8 +188,60 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
   }
 });
 
+const populateManagerImageOverride = (managers) => {
+  managerImageTableBody.innerHTML = "";
+  managers.forEach((manager) => {
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.setAttribute('style','width: 33%;');
+    nameCell.innerHTML = manager + ":";
+    const pictureCell = document.createElement('td');
+    const pictureInput = document.createElement('input');
+    pictureInput.setAttribute('type','text');
+    pictureInput.setAttribute('style','margin-left: 5%; width: 90%;');
+    let managerValue = (managerImageMap[manager]) ? managerImageMap[manager] : '';
+    pictureInput.setAttribute('value', managerValue);
+    pictureInput.addEventListener('change', (event) => {
+      managerImageMap[manager] = event.target.value;
+    });
+    pictureCell.appendChild(pictureInput);
+    row.appendChild(nameCell);
+    row.appendChild(pictureCell);
+    managerImageTableBody.appendChild(row);
+  });
+  let tableHeight = window.getComputedStyle(managerImageTableBody).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 105;
+  powerRankingOptionsDiv.style['max-height'] = `${newHeight}px`;
+}
+
+const populateManagerAlias = (managers) => {
+  managerTableBody.innerHTML = "";
+  managers.forEach((manager) => {
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.setAttribute('style','width: 33%;');
+    nameCell.innerHTML = manager + ":";
+    const aliasCell = document.createElement('td');
+    const aliasInput = document.createElement('input');
+    aliasInput.setAttribute('type','text');
+    aliasInput.setAttribute('style','margin-left: 5%; width: 90%;');
+    let managerValue = (managerMap[manager]) ? managerMap[manager] : '';
+    aliasInput.setAttribute('value', managerValue);
+    aliasInput.addEventListener('change', (event) => {
+      managerMap[manager] = event.target.value;
+    });
+    aliasCell.appendChild(aliasInput);
+    row.appendChild(nameCell);
+    row.appendChild(aliasCell);
+    managerTableBody.appendChild(row);
+  });
+  let tableHeight = window.getComputedStyle(managerTableBody).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 29;
+  managerOptionsDiv.style['max-height'] = `${newHeight}px`;
+}
+
 const populateLastPlaceSelection = (years, sackoMap, owners) => {
-  sackoTable.innerHTML = "";
+  sackoTable.getElementsByTagName('tbody')[0].innerHTML = "";
   years.forEach((year) => {
     const row = document.createElement('tr');
     const yearCell = document.createElement('td');
@@ -162,14 +250,17 @@ const populateLastPlaceSelection = (years, sackoMap, owners) => {
     managerCell.appendChild(generateManagerDropdown(owners, sackoMap[year], year));
     row.appendChild(yearCell);
     row.appendChild(managerCell);
-    sackoTable.appendChild(row);
+    sackoTable.getElementsByTagName('tbody')[0].appendChild(row);
   })
+  let tableHeight = window.getComputedStyle(sackoTable).getPropertyValue('height');
+  const newHeight = parseInt(tableHeight.split('px')[0],10) + 149;
+  leaderBoardOptionsDiv.style['max-height'] = `${newHeight}px`;
 }
 
 const generateManagerDropdown = (managers, selectedManager, year) => {
   let selectManager = document.createElement('select');
   selectManager.setAttribute('data-year', year);
-  selectManager.addEventListener('change', (event, b) => {
+  selectManager.addEventListener('change', (event) => {
     sackoMap[event.target.getAttribute('data-year')] = event.target.value;
   });
   let noneOption = document.createElement('option');
@@ -177,7 +268,7 @@ const generateManagerDropdown = (managers, selectedManager, year) => {
   noneOption.innerHTML = '';
   selectManager.appendChild(noneOption);
 
-  managers.forEach((manager) => {
+  managers[year].forEach((manager) => {
     let managerOption = document.createElement('option');
     managerOption.setAttribute('value', manager);
     managerOption.innerHTML = manager;
@@ -195,8 +286,25 @@ saveButton.onclick = (element) => {
   savedObject[currentLeague] = {QBG: { score: QBG.value, name: QBGName.value}, QBS: { score: QBS.value, name: QBSName.value}, RBG: { score: RBG.value, name: RBGName.value}, RBS: { score: RBS.value, name: RBSName.value},
     WRG: { score: WRG.value, name: WRGName.value}, WRS: { score: WRS.value, name: WRSName.value}, TEG: { score: TEG.value, name: TEGName.value}, TES: { score: TES.value, name: TESName.value},
     DSTG: { score: DSTG.value, name: DSTGName.value}, DSTS: { score: DSTS.value, name: DSTSName.value}, KG: { score: KG.value, name: KGName.value}, KS: { score: KS.value, name: KSName.value},
-    lastSync: lastSync, sackoMap: sackoMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value, hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked};
+    lastSync: lastSync, sackoMap: sackoMap, managerMap: managerMap, managerImageMap: managerImageMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value,
+    hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked, areIconsCollapsed: collapseIconsCheckbox.checked};
   chrome.storage.sync.set(savedObject, () => {
     alert("saved");
   });
 };
+
+resetButton.onclick = (element) => {
+  updateOptionsForLeague();
+}
+
+scriptButton.onclick = (element) => {
+  if(confirm('Are you sure you want to run this script?')) {
+    leagueDatabase.webdb.db.transaction((tx) => {
+      tx.executeSql(customScript.value, [],
+        (tx, rs) => {
+          customScript.value = "";
+          alert('Success');
+        });
+      }, errorHandler);
+  }
+}

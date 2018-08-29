@@ -1,66 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-      .popup-container {
-        width: 400px;
-        height: 145px;
-      }
-      .header {
-        height: 20px;
-        background-color: #1D7225;
-        color: white;
-        font-size: 16px;
-        padding: 5px;
-        border-radius: 4px 4px 0px 0px;
-        margin-bottom: 1px;
-      }
-      .container {
-        background-color: #F2F2E8;
-        color: black;
-      }
-      .container-row {
-        padding: 5px;
-      }
-      .sub-header {
-        height: 16px;
-        background-color: #6DBB75;
-        color: white;
-        font-size: 12px;
-        padding: 5px;
-      }
-      .col-8 {
-        width: 32%;
-        display: inline-block;
-      }
-      .align-left {
-        text-align: left;
-      }
-      .align-center {
-        text-align: center;
-      }
-      .align-right {
-        text-align: right;
-      }
-      button#update-database {
-        float: right;
-        margin-right: 5px;
-      }
-      button#delete-database {
-        float: right;
-      }
-      button#all-time-wins, button#record-book, button#power-rankings {
-        width: 100%
-      }
-      span#database-last-update {
-        margin-left: 5px;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="../css/popup.css">
   </head>
   <body>
     <div class="popup-container">
       <div class="header">
-        ESPN Fantasy Football League Note Generator
+        LM Note Generator For ESPN Fantasy Football
       </div>
       <div class="container">
         <div class="sub-header">
@@ -77,19 +23,27 @@
           <button id="update-database">Update</button>
         </div>
       </div>
-      <div class="container align-center" style="padding: 5px 0px;">
+      <div class="container align-center">
         <div class="sub-header align-left">
-          Generate Content
+          Generate League History Content
         </div>
         <div class="container-row">
-          <div class="col-8 align-left">
+          <div class="col-12 align-left">
             <button id="all-time-wins">Leader Board</button>
           </div>
-          <div class="col-8 align-center">
+          <div class="col-12 align-center">
             <button id="record-book">Record Book</button>
           </div>
-          <div class="col-8 align-right">
-            <button id="power-rankings">Power Rankings</button>
+        </div>
+      </div>
+      <div class="container align-center">
+        <div class="sub-header align-left">
+          Weekly Power Rankings - <span id="power-ranking-week"></span>
+        </div>
+        <div class="container-row">
+          <div class="align-right">
+            <table id="power-rankings-table"><tbody></tbody></table>
+            <button id="power-rankings">Generate Weekly Ranking</button>
           </div>
         </div>
       </div>
@@ -99,4 +53,5 @@
 <script src="vendor/html2canvas.min.js"></script>
 <script src="../js/util.js"></script>
 <script src="../js/recordBook.js"></script>
+<script src="../js/powerRankingUtil.js"></script>
 <script src="../js/popup.js"></script>

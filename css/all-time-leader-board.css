@@ -1,0 +1,63 @@
+<style>
+  #winLeaders {
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    font:normal 10px verdana;
+  }
+  .win-leader-table {
+    width:650px;
+    border:0px solid black;
+    font-size:12px;
+    position:relative;
+    text-align:center;
+  }
+  .win-leader-table th {
+    width:500px;
+    background-color:#1D7225;
+    color:white;
+  }
+  .win-leader-table th h3 {
+    margin:0px;
+  }
+  .win-leader-table td {
+    border-right:1px solid white;
+  }
+  .win-leader-table td:last-child {
+    border-right:none;
+  }
+  .place {
+    width:20px
+    ;padding-left:5px;
+    padding-top:5px
+  }
+  .row:nth-child(odd) {
+    background-color:#F2F2E8;
+  }
+  .row:nth-child(even) {
+    background-color:#F8F8F2;
+  }
+  .leader-header{
+    background-color:#6DBB75;
+    font-size: 10px;
+  }
+  .acunaRow{
+    background-color:#e35e52;
+  }
+  .acuna{
+    font-size: 7px;
+    line-height: 7px;
+    color: white;
+  }
+  #winLeader td b{
+    padding-left:4px;
+    padding-right:4px;
+  }
+  span.icon-number {
+    font-size: 8px;
+    width: 0px;
+    display: inline-block;
+    color: #555;
+    position: relative;
+  }
+</style>

@@ -1,0 +1,92 @@
+.popup-container {
+  width: 400px;
+}
+.header {
+  height: 20px;
+  background-color: #1D7225;
+  color: white;
+  font-size: 16px;
+  padding: 5px;
+  border-radius: 4px 4px 0px 0px;
+  margin-bottom: 1px;
+}
+.container {
+  background-color: #F2F2E8;
+  color: black;
+}
+.container-row {
+  padding: 10px 5px 10px 5px;
+}
+.sub-header {
+  height: 16px;
+  background-color: #6DBB75;
+  color: white;
+  font-size: 12px;
+  padding: 5px;
+}
+.col-8 {
+  width: 32%;
+  display: inline-block;
+}
+.col-12 {
+  width: 49%;
+  display: inline-block;
+}
+.align-left {
+  text-align: left;
+}
+.align-center {
+  text-align: center;
+}
+.align-right {
+  text-align: right;
+}
+button#update-database {
+  float: right;
+  margin-right: 5px;
+}
+button#delete-database {
+  float: right;
+}
+button#all-time-wins, button#record-book, button#power-rankings {
+  width: 100%
+}
+span#database-last-update {
+  margin-left: 5px;
+}
+#power-rankings-table {
+  width: 100%;
+  text-align: center;
+  padding-bottom: 10px;
+}
+#power-rankings-table thead {
+  font-weight: bold;
+}
+#power-rankings-table input[type="text"] {
+  width: 90%;
+  padding-left: 8px;
+  border-radius: 4px;
+  border: 1px solid #aaa;
+}
+#power-rankings-table td:first-child {
+  text-align: right;
+}
+#power-rankings-table select {
+  width: 95%;
+  background: #fafafa;
+  margin-left: 5px;
+}
+input#power-ranking-title {
+  background: inherit;
+  border: none !important;
+  border-bottom: 1px solid #aaa !important;
+  margin-bottom: 5px;
+  text-align: center;
+  font-size: 12px;
+  width: 68% !important;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  display: block;
+  border-radius: 0px !important;
+}

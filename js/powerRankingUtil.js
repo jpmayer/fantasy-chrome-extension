@@ -61,13 +61,7 @@ const generatePowerRanking = (rankingList, title, downloadImageFunction) => {
 
 }
 
-let place = [0,1,3,5,2,7,6,4,9,12,10,11,8];
-
 const generateHTMLRowForPowerRanking = (ranking, record, lastWeeksRanking, leagueDict) => {
-  lastWeeksRanking = {
-    manager: ranking.manager,
-    place: place[ranking.place]
-  }
   let delta = (lastWeeksRanking) ? parseInt(ranking.place) - parseInt(lastWeeksRanking.place) : 0;
   let lastWeekPositionString = (lastWeeksRanking) ? 'Last Week: ' + lastWeeksRanking.place : '';
   let managerName = (leagueDict && leagueDict.managerMap && leagueDict.managerMap[ranking.manager]) ? leagueDict.managerMap[ranking.manager] : ranking.manager;

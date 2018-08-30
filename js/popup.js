@@ -35,6 +35,7 @@ let previousManager = ''; // for power rankings manager dropdown
 let isOverridePowerRanking = false;
 let lastCreatedTabId = null;
 let htmlBlock = null;
+let noOwnerCount = 0;
 
 const positions = { QB: "0.0", RB: "2.0", WR: "4.0", TE: "6.0", DST: "16.0", K: "17.0" }
 const positionsByESPNValue = { "0.0": "QB", "2.0": "RB", "4.0": "WR", "6.0": "TE", "16.0": "DST", "17.0": "K" }
@@ -58,6 +59,10 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
           {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
           (firstYearResults) => {
             firstYear = (firstYearResults[0]) ? firstYearResults[0] : leagueInfo.seasonId;
+            if(parseInt(firstYear) < 2007) {
+              alert("League history limited to after 2006 due to API constraints");
+              firstYear = 2007;
+            }
             selectedYear = leagueInfo.seasonId;
             if(!firstYearResults[0]) {
               // first year league
@@ -250,7 +255,14 @@ const populatePowerRankings = () => {
 let parseTeams = (teamArray) => {
   const ownerMap = {};
   teamArray.forEach((team) => {
-    ownerMap[team.teamId] = team.owners[0].firstName.trim() + " " + team.owners[0].lastName.trim();
+    let ownerName = ''
+    if(team.owners && team.owners[0].firstName) {
+      ownerName = team.owners[0].firstName.trim() + " " + team.owners[0].lastName.trim();
+    } else {
+      ownerName = 'Noname ' + noOwnerCount;
+      noOwnerCount++;
+    }
+    ownerMap[team.teamId] = ownerName;
   });
   return ownerMap;
 }
@@ -425,6 +437,7 @@ enableButtons = () => {
 
 updateDatabase.onclick = (element) => {
   alert("Warning: Do not close the extension popup while database is updating.")
+  noOwnerCount = 0;
   disableButtons();
   setTimeout(() => {
     if(lastSync === null) {

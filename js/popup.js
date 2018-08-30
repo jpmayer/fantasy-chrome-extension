@@ -59,7 +59,7 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
           (firstYearResults) => {
             firstYear = (firstYearResults[0]) ? firstYearResults[0] : leagueInfo.seasonId;
             selectedYear = leagueInfo.seasonId;
-            if(!selectedYear) {
+            if(!firstYearResults[0]) {
               // first year league
               retrieveLeagueDetails(tabs)
             } else {

@@ -203,6 +203,7 @@ const populatePowerRankings = () => {
   leagueDatabase.webdb.db.transaction((tx) => {
     tx.executeSql(query, [currentWeek, selectedYear],
       (tx, tr) => {
+        var place = 1;
         if(tr.rows.length === 0) {
           for(var teamKey in selectedYearLeagueSettings.teams) {
             if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
@@ -213,7 +214,8 @@ const populatePowerRankings = () => {
               const descriptionCell = document.createElement('td');
               const descriptionInput = document.createElement('input');
               rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
-              managerCell.appendChild(generatePRManagerDropdown(teamKey, oName));
+              managerCell.appendChild(generatePRManagerDropdown(place, oName));
+              place += 1;
               descriptionInput.setAttribute('type','text');
               descriptionInput.setAttribute('data-name',oName)
               //descriptionInput.setAttribute('placeholder','...');

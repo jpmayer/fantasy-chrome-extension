@@ -1,6 +1,8 @@
 # LM Note Generator For ESPN Fantasy Football
 Creates LM Note content for a public ESPN Fantasy Football League.
 
+Chrome store: [link](https://chrome.google.com/webstore/detail/lm-note-generator-for-esp/ahcblhpcealjpkmndgmkdnebbjakicno)
+
 ## Documentation
 
 [Wiki](https://github.com/jpmayer/fantasy-chrome-extension/wiki)

@@ -56,6 +56,7 @@ const averageLineNameInput = document.getElementById('acuna-name');
 const lastPlaceNameInput = document.getElementById('sacko-name');
 const hideTeamNamesCheckbox = document.getElementById('team-name-show');
 const showPicturesCheckbox = document.getElementById('pictures-show');
+const playerRecordHideCheckbox = document.getElementById('player-record-hide');
 
 const leaderBoardOptionsDiv = document.getElementById('leader-board-options');
 const managerOptionsDiv = document.getElementById('manager-options');
@@ -170,6 +171,7 @@ const updateOptionsForLeague = () => {
     hideTeamNamesCheckbox.checked = (data.hideTeamNames) ? data.hideTeamNames : false;
     showPicturesCheckbox.checked = (data.showTeamPictures) ? data.showTeamPictures : false;
     collapseIconsCheckbox.checked = (data.areIconsCollapsed) ? data.areIconsCollapsed : false;
+    playerRecordHideCheckbox.checked = (data.hidePlayerRecords) ? data.hidePlayerRecords : false;
 
     //get options from database
     const query = 'SELECT DISTINCT year FROM matchups';
@@ -378,7 +380,7 @@ saveButton.onclick = (element) => {
     WRG: { score: WRG.value, name: WRGName.value, date: WRGDate.value }, WRS: { score: WRS.value, name: WRSName.value, date: WRSDate.value }, TEG: { score: TEG.value, name: TEGName.value, date: TEGDate.value }, TES: { score: TES.value, name: TESName.value, date: TESDate.value },
     DSTG: { score: DSTG.value, name: DSTGName.value, date: DSTGDate.value }, DSTS: { score: DSTS.value, name: DSTSName.value, date: DSTSDate.value }, KG: { score: KG.value, name: KGName.value, date: KGDate.value }, KS: { score: KS.value, name: KSName.value, date: KSDate.value },
     lastSync: lastSync, sackoMap: sackoMap, managerMap: managerMap, managerImageMap: managerImageMap, lastPlaceName: lastPlaceNameInput.value, averageLineName: averageLineNameInput.value,
-    hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked, areIconsCollapsed: collapseIconsCheckbox.checked};
+    hideAverageLine: hideAverageLineCheckbox.checked, track3rdPlaceGame: show3rdPlaceCheckbox.checked, trackLosers: showLoserCheckbox.checked, hideTeamNames: hideTeamNamesCheckbox.checked, showTeamPictures: showPicturesCheckbox.checked, areIconsCollapsed: collapseIconsCheckbox.checked, hidePlayerRecords: playerRecordHideCheckbox.checked };
   chrome.storage.sync.set(savedObject, () => {
     alert("saved");
   });

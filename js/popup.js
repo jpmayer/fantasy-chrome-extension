@@ -58,66 +58,75 @@ chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (data) => {
           {code: 'document.getElementById("seasonHistoryMenu").lastChild.value;'},
           (firstYearResults) => {
             firstYear = (firstYearResults[0]) ? firstYearResults[0] : leagueInfo.seasonId;
-            chrome.tabs.executeScript(
-              tabs[0].id,
-              {code: 'document.getElementById("seasonHistoryMenu").value;'},
-              (selectedYearResults) => {
-                selectedYear = leagueInfo.seasonId; //selectedYearResults[0];
-                // TODO if selectedYearResults and it does not equal selectedYear = disable update db button
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${selectedYear}&matchupPeriodId=1`, false);
-                xhr.send();
-                selectedYearLeagueSettings = JSON.parse(xhr.responseText).leaguesettings;
-
-                powerRankingWeek.innerHTML = 'Matchup Week ' + currentWeek;
-
-                chrome.tabs.executeScript(
-                  tabs[0].id,
-                  {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
-                  (results) => {
-                  leagueName = results[0];
-                  nameDisplay.innerHTML = leagueName;
-                  dbName = 'league-' + leagueId;
-
-                  leagueDatabase.webdb.open = () => {
-                    var dbSize = 5 * 1024 * 1024; // 5MB
-                    leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
-                  }
-                  leagueDatabase.webdb.open();
-
-                  leagueDatabase.webdb.db.transaction((tx) => {
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS " +
-                                  "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT, title TEXT)", [],
-                                  () => {}, errorHandler);
-                  });
-
-                  if(leagueDBNames.indexOf(dbName) === -1) {
-                    if(leagueDBNames.length === 0) {
-                      leagueDBNames = [dbName];
-                    } else {
-                      leagueDBNames.push(dbName);
+            selectedYear = leagueInfo.seasonId;
+            if(!selectedYear) {
+              // first year league
+              retrieveLeagueDetails(tabs)
+            } else {
+              chrome.tabs.executeScript(
+                tabs[0].id,
+                {code: 'document.getElementById("seasonHistoryMenu").getElementsByTagName("option")[0].value'},
+                (latestResults) => {
+                    if(parseInt(selectedYear) !== parseInt(latestResults[0])) {
+                      updateDatabase.setAttribute('disabled','disabled');
                     }
-                    leagueNameMap[dbName] = leagueName;
-                  }
-
-                  chrome.storage.sync.get([dbName], (data) => {
-                    if(data[dbName]) {
-                      lastSync = data[dbName].lastSync;
-                      leagueLocalStorage = data[dbName];
-                    }
-                    // generate power ranking table
-                    populatePowerRankings();
-                    //set last sync display time
-                    syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
-                  });
-
-
+                    retrieveLeagueDetails(tabs);
                 });
-              });
+            }
         });
     });
   });
 });
+
+const retrieveLeagueDetails = (tabs) => {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${selectedYear}&matchupPeriodId=1`, false);
+  xhr.send();
+  selectedYearLeagueSettings = JSON.parse(xhr.responseText).leaguesettings;
+
+  powerRankingWeek.innerHTML = 'Matchup Week ' + currentWeek;
+
+  chrome.tabs.executeScript(
+    tabs[0].id,
+    {code: 'document.getElementById("lo-league-header").getElementsByClassName("league-team-names")[0].getElementsByTagName("h1")[0].title;'},
+    (results) => {
+    leagueName = results[0];
+    nameDisplay.innerHTML = leagueName;
+    dbName = 'league-' + leagueId;
+
+    leagueDatabase.webdb.open = () => {
+      var dbSize = 5 * 1024 * 1024; // 5MB
+      leagueDatabase.webdb.db = openDatabase(dbName, "1", "League Database", dbSize);
+    }
+    leagueDatabase.webdb.open();
+
+    leagueDatabase.webdb.db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "rankings(manager TEXT, week INTEGER, year INTEGER, ranking INTEGER, description TEXT, title TEXT)", [],
+                    () => {}, errorHandler);
+    });
+
+    if(leagueDBNames.indexOf(dbName) === -1) {
+      if(leagueDBNames.length === 0) {
+        leagueDBNames = [dbName];
+      } else {
+        leagueDBNames.push(dbName);
+      }
+      leagueNameMap[dbName] = leagueName;
+    }
+
+    chrome.storage.sync.get([dbName], (data) => {
+      if(data[dbName]) {
+        lastSync = data[dbName].lastSync;
+        leagueLocalStorage = data[dbName];
+      }
+      // generate power ranking table
+      populatePowerRankings();
+      //set last sync display time
+      syncText.innerHTML = (lastSync) ? ('Week ' + lastSync.split('-')[1] + ", Year " + lastSync.split('-')[0]) : 'Never';
+    });
+  });
+}
 
 const generatePRManagerDropdown = (place, selectedTeam) => {
   let selectManager = document.createElement('select');
@@ -169,10 +178,6 @@ const rankingToPlaceString = (ranking) => {
     case '3': place = place + 'rd'; break;
     default: place = place + 'th'; break;
   } return place;
-}
-
-const populatePowerRankingTableData = () => {
-
 }
 
 const populatePowerRankings = () => {

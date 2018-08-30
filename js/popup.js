@@ -376,6 +376,9 @@ createTables = () => {
     xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${yearPointer}&matchupPeriodId=1`, false);
     xhr.send();
     leagueSettings = JSON.parse(xhr.responseText).leaguesettings;
+    if(!leagueSettings) {
+      alert("Private League. API request denied.");
+    }
 
     //get team info for the year to match with ids later
     xhr = new XMLHttpRequest();

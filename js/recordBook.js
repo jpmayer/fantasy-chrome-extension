@@ -405,6 +405,10 @@ const getMostPointsGame = (db, callback) => {
                           records["loseStreak"] = resultLLS;
                           Object.keys(playerPositions).forEach(pos => {
                             getMostPointsPlayerGame(db, playerPositions[pos], leagueDict, function(resultMPPG){
+                              if(!resultMPPG && !leagueDict.hidePlayerRecords) {
+                                alert("Detected Irregular Roster Settings. Please turn off Individual player records via the extension options to generate a record book.")
+                                return;
+                              }
                               records["mostPointsPlayerGame-"+pos] = resultMPPG;
                             });
                             getMostPointsPlayerSeason(db, playerPositions[pos], leagueSettings, leagueDict, function(resultMPPS){

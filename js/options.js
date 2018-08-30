@@ -66,6 +66,9 @@ const managerTable = document.getElementById('manager-override');
 const managerImageTable = document.getElementById('pictures-override');
 const sackoTable = document.getElementById('sacko-override');
 
+let os = 'mac';
+let numColumns = 60;
+
 const errorHandler = (transaction, error) => {
   alert("Error processing SQL: "+ error.message);
   return true;
@@ -201,24 +204,27 @@ const updateOptionsForLeague = () => {
   });
 }
 
-chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
-  leagueDBNames = result.leagueDBNames;
-  leagueNameMap = result.leagueNameMap;
-  currentLeague = (leagueDBNames && leagueDBNames.length > 0) ? leagueDBNames[0] : null;
-  if(currentLeague) {
-    const options = [];
-    for(var i = 0; i < leagueDBNames.length; i++) {
-      let selected = (i === 0) ? 'selected' : '';
-      options.push(`<option value='${leagueDBNames[i]}' ${selected}>${leagueNameMap[leagueDBNames[i]]}</option>`)
+chrome.runtime.getPlatformInfo(function(info) {
+  os = info.os;
+  chrome.storage.sync.get(['leagueDBNames','leagueNameMap'], (result) => {
+    leagueDBNames = result.leagueDBNames;
+    leagueNameMap = result.leagueNameMap;
+    currentLeague = (leagueDBNames && leagueDBNames.length > 0) ? leagueDBNames[0] : null;
+    if(currentLeague) {
+      const options = [];
+      for(var i = 0; i < leagueDBNames.length; i++) {
+        let selected = (i === 0) ? 'selected' : '';
+        options.push(`<option value='${leagueDBNames[i]}' ${selected}>${leagueNameMap[leagueDBNames[i]]}</option>`)
+      }
+      leagueSelector.innerHTML = options;
+      //leagueTitle.innerHTML = result.leagueNameMap[currentLeague];
+      updateOptionsForLeague();
+    } else {
+      resetButton.setAttribute('disabled','disabled');
+      saveButton.setAttribute('disabled','disabled');
+      container.innerHTML = "<div class='container' style='padding:25px; text-align:center;'>Upload league database before adding league options</div>";
     }
-    leagueSelector.innerHTML = options;
-    //leagueTitle.innerHTML = result.leagueNameMap[currentLeague];
-    updateOptionsForLeague();
-  } else {
-    resetButton.setAttribute('disabled','disabled');
-    saveButton.setAttribute('disabled','disabled');
-    container.innerHTML = "<div class='container' style='padding:25px; text-align:center;'>Upload league database before adding league options</div>";
-  }
+  });
 });
 
 const populateManagerImageOverride = (managers) => {

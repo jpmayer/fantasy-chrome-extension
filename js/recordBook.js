@@ -1,5 +1,5 @@
 const getMostPointsGame = (db, callback) => {
-  let query = "SELECT manager, score, year, week, vs FROM matchups WHERE week < 14 ORDER BY score DESC LIMIT 1"
+  let query = "SELECT manager, score, year, week, vs FROM matchups ORDER BY score DESC LIMIT 1"
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -48,7 +48,7 @@ const getMostPointsSeason = (db, leagueSettings, callback) => {
 }
 
 const getMostPointsMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups WHERE week < 14 ORDER BY matchupTotal DESC LIMIT 1"
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups ORDER BY matchupTotal DESC LIMIT 1"
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -218,7 +218,7 @@ const getSmallestMarginMatchup = (db, callback) => {
 }
 
 const getBiggestBlowoutMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MAX(ABS(pointDiff)) FROM matchups WHERE winLoss = 1 AND week < 14";
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MAX(ABS(pointDiff)) FROM matchups WHERE winLoss = 1";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {

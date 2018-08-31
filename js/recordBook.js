@@ -1,5 +1,5 @@
 const getMostPointsGame = (db, callback) => {
-  let query = "SELECT manager, score, year, week, vs FROM matchups ORDER BY score DESC LIMIT 1"
+  let query = "SELECT manager, score, year, week, vs FROM matchups WHERE week < 14 ORDER BY score DESC LIMIT 1"
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -48,7 +48,7 @@ const getMostPointsSeason = (db, leagueSettings, callback) => {
 }
 
 const getMostPointsMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups ORDER BY matchupTotal DESC LIMIT 1"
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, isHomeGame FROM matchups WHERE week < 14 ORDER BY matchupTotal DESC LIMIT 1"
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -218,7 +218,7 @@ const getSmallestMarginMatchup = (db, callback) => {
 }
 
 const getBiggestBlowoutMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MAX(ABS(pointDiff)) FROM matchups WHERE winLoss = 1";
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MAX(ABS(pointDiff)) FROM matchups WHERE winLoss = 1 AND week < 14";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -499,7 +499,7 @@ const generateRecordBookHTML = (records, leagueDict) => {
   resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (G) </td><td class='center even'>" + roundScore(records["fewestPointsGame"].score) + "</td><td class='center even'>" + getManagerName(records["fewestPointsGame"].manager, leagueDict.managerMap) + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType odd'>Fewest Points (S) </td><td class='center odd'>" + roundScore(records["fewestPointsSeason"].score) + "</td><td class='center odd'>" + getManagerName(records["fewestPointsSeason"].manager, leagueDict.managerMap) + " - " + records["fewestPointsSeason"].year + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType even'>Fewest Points (M) </td><td class='center even'>" + roundScore(records["fewestPointsMatchup"].matchupTotal) + "</td><td class='center even'>" + fewestMatchupString + "</td></tr>"
-  resultString = resultString + "<tr> <td class='recordType even'>Smallest Margin of Victory (M) </td><td class='center even'>" + roundScore(records["smallestMarginMatchup"].pointDiff) + "</td><td class='center even'>" + smallestMarginString + "</td></tr>"
+  resultString = resultString + "<tr> <td class='recordType odd'>Smallest Margin of Victory (M) </td><td class='center odd'>" + roundScore(records["smallestMarginMatchup"].pointDiff) + "</td><td class='center odd'>" + smallestMarginString + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType even'>Biggest Blowout (M) </td><td class='center even'>" + roundScore(records["biggestBlowoutMatchup"].pointDiff) + "</td><td class='center even'>" + biggestBlowoutString + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType odd'>Most Points Allowed (S) </td><td class='center odd'>" + roundScore(records["mostPointsAllowedSeason"].totalPoints) + "</td><td class='center odd'>" + getManagerName(records["mostPointsAllowedSeason"].vs, leagueDict.managerMap) + " - " + records["mostPointsAllowedSeason"].year + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType even'>Fewest Points Allowed (S) </td><td class='center even'>" + roundScore(records["fewestPointsAllowedSeason"].totalPoints) + "</td><td class='center even'>" + getManagerName(records["fewestPointsAllowedSeason"].vs, leagueDict.managerMap) + " - " + records["fewestPointsAllowedSeason"].year + "</td></tr>"

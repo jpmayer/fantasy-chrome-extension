@@ -203,7 +203,7 @@ const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
 }
 
 const getSmallestMarginMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MIN(ABS(pointDiff)) FROM matchups WHERE winLoss = 1";
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff FROM matchups WHERE winLoss = 1 ORDER BY pointDiff ASC LIMIT 1";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -218,7 +218,7 @@ const getSmallestMarginMatchup = (db, callback) => {
 }
 
 const getBiggestBlowoutMatchup = (db, callback) => {
-  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff, MAX(ABS(pointDiff)) FROM matchups WHERE winLoss = 1";
+  let query = "SELECT manager, matchupTotal, score, year, week, vs, winLoss, pointDiff FROM matchups WHERE winLoss = 1 ORDER BY pointDiff DESC LIMIT 1";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {

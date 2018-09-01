@@ -310,7 +310,7 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
     let awayOutcome = 3;
     let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
     let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
-    let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index > Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
+    let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index >= Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
     if(matchup.outcome === 1) {
       awayOutcome = 2;
     } else if(matchup.outcome === 2) {
@@ -745,7 +745,6 @@ const powerRankingClickFunction = (element) => {
         }
         //save to DB
         let weeklyPowerRankingClone = JSON.parse(JSON.stringify(weeklyPowerRanking));
-        // TODO: if same week already saved, need to delete old records - confirm modal?
         saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking, onReady);
       }, errorHandler);
   });

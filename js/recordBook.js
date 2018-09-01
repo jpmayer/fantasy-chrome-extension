@@ -210,7 +210,6 @@ const getSmallestMarginMatchup = (db, callback) => {
           if(rs.rows.length === 0) {
             callback(null);
           } else {
-            console.log(rs.rows);
             callback(rs.rows[0]);
           }
         });
@@ -225,7 +224,6 @@ const getBiggestBlowoutMatchup = (db, callback) => {
           if(rs.rows.length === 0) {
             callback(null);
           } else {
-            console.log(rs.rows);
             callback(rs.rows[0]);
           }
         });

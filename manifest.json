@@ -14,9 +14,7 @@
     }
   ],
   "web_accessible_resources": [
-    "js/screenshot.js",
-    "images/poop.png",
-    "images/trophy.png"
+    "js/screenshot.js"
   ],
   "options_page": "html/options.html",
   "page_action": {

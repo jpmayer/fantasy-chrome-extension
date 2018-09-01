@@ -10,7 +10,6 @@ const saveScreenshot = (callback) => {
 }
 
 const listenerFunction = (request, sender, sendResponse) => {
-  console.log("hearing it", request)
   if (request.msg === "something_completed") {
     document.getElementById("create-screenshot").innerHTML = request.data.html;
     html2canvas(document.getElementById("create-screenshot"),

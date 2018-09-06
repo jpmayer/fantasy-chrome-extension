@@ -36,8 +36,8 @@ let isOverridePowerRanking = false;
 let lastCreatedTabId = null;
 let htmlBlock = null;
 let noOwnerCount = 0;
-
-const positions = { QB: "0.0", RB: "2.0", WR: "4.0", TE: "6.0", DST: "16.0", K: "17.0" }
+//{ 0: 'QB', 1: 'TQB', 2: 'RB', 3: 'RB/WR', 4: 'WR', 5: 'WR/TE', 6: 'TE', 7: 'OP', 8: 'DT', 9: 'DE', 10: 'LB', 11: 'DL', 12: 'CB', 13: 'S', 14: 'DB', 15: 'DP', 16: 'D/ST', 17: 'K', 18: 'P', 19: 'HC', 20: 'BE', 21: 'IR', 22: '', 23: 'RB/WR/TE' }
+const positions = { QB: "0.0", RB: "2.0", 'RB/WR': '2.0', WR: "4.0", "WR/TE": "4.0", TE: "6.0", DST: "16.0", 'D/ST': "16.0", K: "17.0" }
 const positionsByESPNValue = { "0.0": "QB", "2.0": "RB", "4.0": "WR", "6.0": "TE", "16.0": "DST", "17.0": "K" }
 
 //get initial options - league id and name, lastSync and former saved options
@@ -188,16 +188,13 @@ const rankingToPlaceString = (ranking) => {
 const populatePowerRankings = () => {
   const query = "SELECT manager, ranking, week, year, description, title FROM rankings WHERE week = ? AND year = ?";
   const powerRankingTitleRow = document.createElement('tr');
-  //const powerRankingTitleCell = document.createElement('td');
   const powerRankingTitleInputCell = document.createElement('td');
   const powerRankingTitleInput = document.createElement('input');
   powerRankingTitleInput.setAttribute('type', 'text');
   powerRankingTitleInput.setAttribute('id', 'power-ranking-title');
   powerRankingTitleInputCell.setAttribute('colspan', '3');
   powerRankingTitleInput.setAttribute('placeholder', getPowerRankingWeekNameDisplay(currentWeek, selectedYearLeagueSettings.finalRegularSeasonMatchupPeriodId, selectedYearLeagueSettings.finalMatchupPeriodId) + ' ' + selectedYear);
-  //powerRankingTitleCell.innerHTML = 'Title:';
   powerRankingTitleInputCell.appendChild(powerRankingTitleInput);
-  //powerRankingTitleRow.appendChild(powerRankingTitleCell);
   powerRankingTitleRow.appendChild(powerRankingTitleInputCell);
   powerRankingTable.innerHTML = powerRankingTitleRow.outerHTML;
   leagueDatabase.webdb.db.transaction((tx) => {
@@ -218,7 +215,6 @@ const populatePowerRankings = () => {
               place += 1;
               descriptionInput.setAttribute('type','text');
               descriptionInput.setAttribute('data-name',oName)
-              //descriptionInput.setAttribute('placeholder','...');
               descriptionCell.appendChild(descriptionInput);
               row.appendChild(rankingCell);
               row.appendChild(managerCell);
@@ -241,7 +237,6 @@ const populatePowerRankings = () => {
             descriptionInput.setAttribute('type','text');
             descriptionInput.setAttribute('data-name',oName)
             descriptionInput.value = tr.rows[i].description;
-            //descriptionInput.setAttribute('placeholder','...');
             descriptionCell.appendChild(descriptionInput);
             row.appendChild(rankingCell);
             row.appendChild(managerCell);
@@ -281,7 +276,7 @@ isValidPostSeasonMatchup = (periodId, index, champWeek) => {
 const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup, hasNextMatchup) => {
   let matchup = matchups.shift();
   if(!matchup.isBye && (periodId <= leagueSettings.finalRegularSeasonMatchupPeriodId || isValidPostSeasonMatchup(periodId, index, leagueSettings.finalMatchupPeriodId))) {
-    if(currentYear - seasonId <= 1) {
+    /*if(currentYear - seasonId <= 1) {
       // if current year or previous year, calculate player records
       var xhr = new XMLHttpRequest();
       xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
@@ -296,15 +291,56 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
             if(playerStats.player) {
               //only save if player slot filled
               let position = playerStats.player.eligibleSlotCategoryIds[0];
+              let score = (typeof playerStats.currentPeriodRealStats.appliedStatTotal !== 'undefined') ? playerStats.currentPeriodRealStats.appliedStatTotal : 0;
               leagueDatabase.webdb.db.transaction((tx) => {
                 tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
-                    [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, playerStats.currentPeriodRealStats.appliedStatTotal], ()=>{}, errorHandler);
+                    [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, score], ()=>{}, errorHandler);
                });
             }
           }
         })
       })
-    }
+    } else {*/
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", `http://games.espn.com/ffl/boxscorequick?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}&view=scoringperiod&version=quick`, false);
+      xhr.send();
+
+      var elem = document.createElement('div');
+      elem.style.display = 'none';
+      let tables = getPlayerTable(xhr.responseText);
+      let players = tables[tables.length - 1].getElementsByClassName('pncPlayerRow')
+      let players2 = tables[0].getElementsByClassName('pncPlayerRow')
+      console.log(periodId, seasonId, players, players2)
+      for(var i = 0; i < players.length; i++) {
+        if(players[i].getElementsByClassName('playertablePlayerName').length > 0) {
+          let playerString = stripLinks(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
+          let playerName = playerString.split(',')[0];
+          let playerPos = playerString.split('&nbsp;')[1];
+          let playerScore = players[i].getElementsByClassName('appliedPoints')[0].innerHTML;
+          if(playerScore !== '--') {
+            leagueDatabase.webdb.db.transaction((tx) => {
+              tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                  [ownerLookup[matchup.awayTeamId], periodId, seasonId, playerName, positions[playerPos], playerScore], ()=>{}, errorHandler);
+             });
+          }
+
+        }
+      }
+      for(var i = 0; i < players2.length; i++) {
+        if(players2[i].getElementsByClassName('playertablePlayerName').length > 0) {
+          let playerString = stripLinks(players2[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
+          let playerName = playerString.split(',')[0];
+          let playerPos = playerString.split('&nbsp;')[1];
+          let playerScore = players2[i].getElementsByClassName('appliedPoints')[0].innerHTML;
+          if(playerScore !== '--') {
+            leagueDatabase.webdb.db.transaction((tx) => {
+              tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                  [ownerLookup[matchup.homeTeamId], periodId, seasonId, playerName, positions[playerPos], playerScore], ()=>{}, errorHandler);
+             });
+           }
+        }
+      }
+    //}
     let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
     let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
     let awayOutcome = 3;
@@ -394,7 +430,7 @@ createTables = () => {
     let scheduleItems = leagueSchedule.scheduleItems;
     let seasonId = leagueSchedule.seasonId;
 
-    scheduleItems.some((week) => { //add setting for this - pull from league Settings
+    scheduleItems.some((week) => {
       weekPointer = week.matchupPeriodId;
       // check for current week
       if(initialRun) {
@@ -748,4 +784,31 @@ const powerRankingClickFunction = (element) => {
         saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking, onReady);
       }, errorHandler);
   });
+}
+
+const stripLinks = (s) => {
+  var div = document.createElement('div');
+  div.innerHTML = s;
+  var links = div.getElementsByTagName('a');
+  var i = links.length;
+  while (i--) {
+    let innerText = links[i].innerHTML;
+    links[i].parentNode.prepend(innerText);
+    links[i].parentNode.removeChild(links[i]);
+  }
+  return div.innerHTML;
+}
+
+const getPlayerTable = (s) => {
+  var div = document.createElement('div');
+  div.innerHTML = s;
+  var tables = div.getElementsByTagName('table');
+  var i = tables.length;
+  let tableList = [];
+  while (i--) {
+    if(tables[i].classList.contains('playerTableTable')) {
+      tableList.push(tables[i]);
+    }
+  }
+  return tableList;
 }

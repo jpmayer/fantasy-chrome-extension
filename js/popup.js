@@ -36,8 +36,8 @@ let isOverridePowerRanking = false;
 let lastCreatedTabId = null;
 let htmlBlock = null;
 let noOwnerCount = 0;
-
-const positions = { QB: "0.0", RB: "2.0", WR: "4.0", TE: "6.0", DST: "16.0", K: "17.0" }
+//{ 0: 'QB', 1: 'TQB', 2: 'RB', 3: 'RB/WR', 4: 'WR', 5: 'WR/TE', 6: 'TE', 7: 'OP', 8: 'DT', 9: 'DE', 10: 'LB', 11: 'DL', 12: 'CB', 13: 'S', 14: 'DB', 15: 'DP', 16: 'D/ST', 17: 'K', 18: 'P', 19: 'HC', 20: 'BE', 21: 'IR', 22: '', 23: 'RB/WR/TE' }
+const positions = { QB: "0.0", RB: "2.0", 'RB/WR': '2.0', WR: "4.0", "WR/TE": "4.0", TE: "6.0", DST: "16.0", 'D/ST': "16.0", K: "17.0" }
 const positionsByESPNValue = { "0.0": "QB", "2.0": "RB", "4.0": "WR", "6.0": "TE", "16.0": "DST", "17.0": "K" }
 
 //get initial options - league id and name, lastSync and former saved options
@@ -188,16 +188,13 @@ const rankingToPlaceString = (ranking) => {
 const populatePowerRankings = () => {
   const query = "SELECT manager, ranking, week, year, description, title FROM rankings WHERE week = ? AND year = ?";
   const powerRankingTitleRow = document.createElement('tr');
-  //const powerRankingTitleCell = document.createElement('td');
   const powerRankingTitleInputCell = document.createElement('td');
   const powerRankingTitleInput = document.createElement('input');
   powerRankingTitleInput.setAttribute('type', 'text');
   powerRankingTitleInput.setAttribute('id', 'power-ranking-title');
   powerRankingTitleInputCell.setAttribute('colspan', '3');
   powerRankingTitleInput.setAttribute('placeholder', getPowerRankingWeekNameDisplay(currentWeek, selectedYearLeagueSettings.finalRegularSeasonMatchupPeriodId, selectedYearLeagueSettings.finalMatchupPeriodId) + ' ' + selectedYear);
-  //powerRankingTitleCell.innerHTML = 'Title:';
   powerRankingTitleInputCell.appendChild(powerRankingTitleInput);
-  //powerRankingTitleRow.appendChild(powerRankingTitleCell);
   powerRankingTitleRow.appendChild(powerRankingTitleInputCell);
   powerRankingTable.innerHTML = powerRankingTitleRow.outerHTML;
   leagueDatabase.webdb.db.transaction((tx) => {
@@ -205,26 +202,33 @@ const populatePowerRankings = () => {
       (tx, tr) => {
         var place = 1;
         if(tr.rows.length === 0) {
+          //show managers by points scored
+          let sortedArray = [];
           for(var teamKey in selectedYearLeagueSettings.teams) {
-            if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
-              let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
-              const row = document.createElement('tr');
-              const rankingCell = document.createElement('td');
-              const managerCell = document.createElement('td');
-              const descriptionCell = document.createElement('td');
-              const descriptionInput = document.createElement('input');
-              rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
-              managerCell.appendChild(generatePRManagerDropdown(place, oName));
-              place += 1;
-              descriptionInput.setAttribute('type','text');
-              descriptionInput.setAttribute('data-name',oName)
-              //descriptionInput.setAttribute('placeholder','...');
-              descriptionCell.appendChild(descriptionInput);
-              row.appendChild(rankingCell);
-              row.appendChild(managerCell);
-              row.appendChild(descriptionCell);
-              powerRankingTable.appendChild(row);
-            }
+            sortedArray.push(selectedYearLeagueSettings.teams[teamKey]);
+          }
+          sortedArray.sort((a,b) => {
+            if(a.record.pointsFor < b.record.pointsFor) return 1;
+            else if(a.record.pointsFor > b.record.pointsFor) return -1;
+            else return 0;
+          })
+          for(var i = 0; i < sortedArray.length; i++) {
+            let oName = sortedArray[i].owners[0].firstName.trim() + ' ' + sortedArray[i].owners[0].lastName.trim();
+            const row = document.createElement('tr');
+            const rankingCell = document.createElement('td');
+            const managerCell = document.createElement('td');
+            const descriptionCell = document.createElement('td');
+            const descriptionInput = document.createElement('input');
+            rankingCell.innerHTML = rankingToPlaceString(i+1) + ": ";
+            managerCell.appendChild(generatePRManagerDropdown(place, oName));
+            place += 1;
+            descriptionInput.setAttribute('type','text');
+            descriptionInput.setAttribute('data-name',oName)
+            descriptionCell.appendChild(descriptionInput);
+            row.appendChild(rankingCell);
+            row.appendChild(managerCell);
+            row.appendChild(descriptionCell);
+            powerRankingTable.appendChild(row);
           }
         } else {
           isOverridePowerRanking = true;
@@ -241,7 +245,6 @@ const populatePowerRankings = () => {
             descriptionInput.setAttribute('type','text');
             descriptionInput.setAttribute('data-name',oName)
             descriptionInput.value = tr.rows[i].description;
-            //descriptionInput.setAttribute('placeholder','...');
             descriptionCell.appendChild(descriptionInput);
             row.appendChild(rankingCell);
             row.appendChild(managerCell);
@@ -281,64 +284,79 @@ isValidPostSeasonMatchup = (periodId, index, champWeek) => {
 const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup, hasNextMatchup) => {
   let matchup = matchups.shift();
   if(!matchup.isBye && (periodId <= leagueSettings.finalRegularSeasonMatchupPeriodId || isValidPostSeasonMatchup(periodId, index, leagueSettings.finalMatchupPeriodId))) {
-    if(currentYear - seasonId <= 1) {
-      // if current year or previous year, calculate player records
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
-      xhr.send();
-      var boxscore = JSON.parse(xhr.responseText).boxscore;
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", `http://games.espn.com/ffl/boxscorequick?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}&view=scoringperiod&version=quick`, true);
+    xhr.onload = (e) => {
+      let tables = getPlayerTable(xhr.responseText);
+      let players = tables[tables.length - 1].getElementsByClassName('pncPlayerRow')
+      let players2 = tables[0].getElementsByClassName('pncPlayerRow')
+      for(var i = 0; i < players.length; i++) {
+        if(players[i].getElementsByClassName('playertablePlayerName').length > 0) {
+          let playerString = stripLinks(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
+          let playerName = playerString.split(',')[0];
+          let playerPos = playerString.split('&nbsp;')[1];
+          let playerScore = players[i].getElementsByClassName('appliedPoints')[0].innerHTML;
+          if(playerScore !== '--') {
+            leagueDatabase.webdb.db.transaction((tx) => {
+              tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                  [ownerLookup[matchup.awayTeamId], periodId, seasonId, playerName, positions[playerPos], playerScore], ()=>{}, errorHandler);
+             });
+          }
 
-      boxscore.teams.forEach((teamMatchup) => {
-        const teamName = teamMatchup.team.teamId;
-        teamMatchup.slots.forEach((playerStats) => {
-          if(playerStats.slotCategoryId !== 20) {
-            // dont save bench players
-            if(playerStats.player) {
-              //only save if player slot filled
-              let position = playerStats.player.eligibleSlotCategoryIds[0];
-              leagueDatabase.webdb.db.transaction((tx) => {
-                tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
-                    [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, playerStats.currentPeriodRealStats.appliedStatTotal], ()=>{}, errorHandler);
-               });
+        }
+      }
+      for(var i = 0; i < players2.length; i++) {
+        if(players2[i].getElementsByClassName('playertablePlayerName').length > 0) {
+          let playerString = stripLinks(players2[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
+          let playerName = playerString.split(',')[0];
+          let playerPos = playerString.split('&nbsp;')[1];
+          let playerScore = players2[i].getElementsByClassName('appliedPoints')[0].innerHTML;
+          if(playerScore !== '--') {
+            leagueDatabase.webdb.db.transaction((tx) => {
+              tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
+                  [ownerLookup[matchup.homeTeamId], periodId, seasonId, playerName, positions[playerPos], playerScore], ()=>{}, errorHandler);
+             });
+           }
+        }
+      }
+      let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
+      let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
+      let awayOutcome = 3;
+      let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
+      let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
+      let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index >= Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
+      if(matchup.outcome === 1) {
+        awayOutcome = 2;
+      } else if(matchup.outcome === 2) {
+        awayOutcome = 1;
+      }
+      // home team
+      leagueDatabase.webdb.db.transaction((tx) => {
+        tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore), isThirdPlaceGame, isChampionship, isLosersBacketGame], ()=>{}, errorHandler);
+       });
+      // away team
+      leagueDatabase.webdb.db.transaction((tx) => {
+        tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
+          (tx, tr) => {
+            loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
+            if(isEndOfDatabaseUpdates(lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup)) {
+              setTimeout(() => {
+                //TODO : have handler only show once if users save third place or losers bracket games
+                alert("Database Update Complete")
+                enableButtons();
+              })
             }
-          }
-        })
-      })
-    }
-    let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
-    let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
-    let awayOutcome = 3;
-    let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
-    let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
-    let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index >= Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
-    if(matchup.outcome === 1) {
-      awayOutcome = 2;
-    } else if(matchup.outcome === 2) {
-      awayOutcome = 1;
-    }
-    // home team
-    leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore), isThirdPlaceGame, isChampionship, isLosersBacketGame], ()=>{}, errorHandler);
-     });
-    // away team
-    leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
-        (tx, tr) => {
-          loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
-          if(isEndOfDatabaseUpdates(lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup)) {
-            setTimeout(() => {
-              //TODO : have handler only show once if users save third place or losers bracket games
-              alert("Database Update Complete")
-              enableButtons();
-            })
-          }
-        }, errorHandler);
-     });
-     if(matchups.length > 0) {
-       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
-     }
+          }, errorHandler);
+       });
+       if(matchups.length > 0) {
+         addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
+       }
+    };
+    xhr.send(null);
+
+
   } else if(matchups.length > 0) {
     addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
   }
@@ -394,7 +412,7 @@ createTables = () => {
     let scheduleItems = leagueSchedule.scheduleItems;
     let seasonId = leagueSchedule.seasonId;
 
-    scheduleItems.some((week) => { //add setting for this - pull from league Settings
+    scheduleItems.some((week) => {
       weekPointer = week.matchupPeriodId;
       // check for current week
       if(initialRun) {
@@ -404,7 +422,7 @@ createTables = () => {
           return true;
         }
       } else if(currentYear === yearPointer && currentWeek === weekPointer) {
-        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer - 1) + "-" + weekPointer;
+        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer) + "-" + (weekPointer - 1);
         return true;
       }
       initialRun = false;
@@ -748,4 +766,31 @@ const powerRankingClickFunction = (element) => {
         saveWeeklyPowerRanking(weeklyPowerRankingClone, powerRankingTitle, weeklyPowerRanking, generatePowerRanking, onReady);
       }, errorHandler);
   });
+}
+
+const stripLinks = (s) => {
+  var div = document.createElement('div');
+  div.innerHTML = s;
+  var links = div.getElementsByTagName('a');
+  var i = links.length;
+  while (i--) {
+    let innerText = links[i].innerHTML;
+    links[i].parentNode.prepend(innerText);
+    links[i].parentNode.removeChild(links[i]);
+  }
+  return div.innerHTML;
+}
+
+const getPlayerTable = (s) => {
+  var div = document.createElement('div');
+  div.innerHTML = s;
+  var tables = div.getElementsByTagName('table');
+  var i = tables.length;
+  let tableList = [];
+  while (i--) {
+    if(tables[i].classList.contains('playerTableTable')) {
+      tableList.push(tables[i]);
+    }
+  }
+  return tableList;
 }

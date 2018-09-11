@@ -276,39 +276,12 @@ isValidPostSeasonMatchup = (periodId, index, champWeek) => {
 const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId, ownerLookup, hasNextMatchup) => {
   let matchup = matchups.shift();
   if(!matchup.isBye && (periodId <= leagueSettings.finalRegularSeasonMatchupPeriodId || isValidPostSeasonMatchup(periodId, index, leagueSettings.finalMatchupPeriodId))) {
-    /*if(currentYear - seasonId <= 1) {
-      // if current year or previous year, calculate player records
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", `http://games.espn.com/ffl/api/v2/boxscore?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}`, false);
-      xhr.send();
-      var boxscore = JSON.parse(xhr.responseText).boxscore;
-
-      boxscore.teams.forEach((teamMatchup) => {
-        const teamName = teamMatchup.team.teamId;
-        teamMatchup.slots.forEach((playerStats) => {
-          if(playerStats.slotCategoryId !== 20) {
-            // dont save bench players
-            if(playerStats.player) {
-              //only save if player slot filled
-              let position = playerStats.player.eligibleSlotCategoryIds[0];
-              let score = (typeof playerStats.currentPeriodRealStats.appliedStatTotal !== 'undefined') ? playerStats.currentPeriodRealStats.appliedStatTotal : 0;
-              leagueDatabase.webdb.db.transaction((tx) => {
-                tx.executeSql("INSERT INTO history(manager, week, year, player, playerPosition, score) VALUES (?,?,?,?,?,?)",
-                    [ownerLookup[teamName], periodId, seasonId, (playerStats.player.firstName.trim() + " " + playerStats.player.lastName.trim()), position, score], ()=>{}, errorHandler);
-               });
-            }
-          }
-        })
-      })
-    } else {*/
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", `http://games.espn.com/ffl/boxscorequick?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}&view=scoringperiod&version=quick`, false);
-      xhr.send();
-
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", `http://games.espn.com/ffl/boxscorequick?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}&view=scoringperiod&version=quick`, true);
+    xhr.onload = (e) => {
       let tables = getPlayerTable(xhr.responseText);
       let players = tables[tables.length - 1].getElementsByClassName('pncPlayerRow')
       let players2 = tables[0].getElementsByClassName('pncPlayerRow')
-      console.log("Still Loading", periodId, seasonId)
       for(var i = 0; i < players.length; i++) {
         if(players[i].getElementsByClassName('playertablePlayerName').length > 0) {
           let playerString = stripLinks(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
@@ -338,41 +311,44 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
            }
         }
       }
-    //}
-    let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
-    let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
-    let awayOutcome = 3;
-    let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
-    let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
-    let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index >= Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
-    if(matchup.outcome === 1) {
-      awayOutcome = 2;
-    } else if(matchup.outcome === 2) {
-      awayOutcome = 1;
-    }
-    // home team
-    leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore), isThirdPlaceGame, isChampionship, isLosersBacketGame], ()=>{}, errorHandler);
-     });
-    // away team
-    leagueDatabase.webdb.db.transaction((tx) => {
-      tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-          [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
-        (tx, tr) => {
-          loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
-          if(isEndOfDatabaseUpdates(lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup)) {
-            setTimeout(() => {
-              //TODO : have handler only show once if users save third place or losers bracket games
-              alert("Database Update Complete")
-              enableButtons();
-            })
-          }
-        }, errorHandler);
-     });
-     if(matchups.length > 0) {
-       addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
-     }
+      let homeScore = matchup.homeTeamScores.reduce((a, b) => a + b, 0);
+      let awayScore = matchup.awayTeamScores.reduce((a, b) => a + b, 0);
+      let awayOutcome = 3;
+      let isThirdPlaceGame = (periodId === leagueSettings.finalMatchupPeriodId && index === 1) ? true : false;
+      let isChampionship = (periodId === leagueSettings.finalMatchupPeriodId && index === 0) ? true : false;
+      let isLosersBacketGame = (periodId > leagueSettings.finalRegularSeasonMatchupPeriodId && index >= Math.pow(2, leagueSettings.finalMatchupPeriodId - periodId)) ? true : false;
+      if(matchup.outcome === 1) {
+        awayOutcome = 2;
+      } else if(matchup.outcome === 2) {
+        awayOutcome = 1;
+      }
+      // home team
+      leagueDatabase.webdb.db.transaction((tx) => {
+        tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            [ownerLookup[matchup.homeTeamId], periodId, seasonId, ownerLookup[matchup.awayTeamId], true, matchup.outcome, (homeScore + matchup.homeTeamBonus), (awayScore + homeScore + matchup.homeTeamBonus), ((homeScore + matchup.homeTeamBonus) - awayScore), isThirdPlaceGame, isChampionship, isLosersBacketGame], ()=>{}, errorHandler);
+       });
+      // away team
+      leagueDatabase.webdb.db.transaction((tx) => {
+        tx.executeSql("INSERT INTO matchups(manager, week, year, vs, isHomeGame, winLoss, score, matchupTotal, pointDiff, isThirdPlaceGame, isChampionship, isLosersBacketGame) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            [ownerLookup[matchup.awayTeamId], periodId, seasonId, ownerLookup[matchup.homeTeamId], false, awayOutcome, awayScore, (awayScore + homeScore + matchup.homeTeamBonus), (awayScore - (homeScore + matchup.homeTeamBonus)), isThirdPlaceGame, isChampionship, isLosersBacketGame],
+          (tx, tr) => {
+            loadingDiv.innerHTML = 'Uploading Matchup ' + periodId + ', Year ' + pointerYear;
+            if(isEndOfDatabaseUpdates(lastDate, pointerYear, periodId, isChampionship, isThirdPlaceGame, hasNextMatchup)) {
+              setTimeout(() => {
+                //TODO : have handler only show once if users save third place or losers bracket games
+                alert("Database Update Complete")
+                enableButtons();
+              })
+            }
+          }, errorHandler);
+       });
+       if(matchups.length > 0) {
+         addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
+       }
+    };
+    xhr.send(null);
+
+
   } else if(matchups.length > 0) {
     addMatchupBoxscoreToDB(matchups, ++index, periodId, pointerYear, seasonId, ownerLookup, matchups.length > 1);
   }
@@ -438,8 +414,7 @@ createTables = () => {
           return true;
         }
       } else if(currentYear === yearPointer && currentWeek === weekPointer) {
-        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer) + "-" + weekPointer;
-        addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, seasonId, ownerLookup, week.matchups.length > 1);
+        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer) + "-" + (weekPointer - 1);
         return true;
       }
       initialRun = false;

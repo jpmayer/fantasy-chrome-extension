@@ -305,12 +305,10 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
       xhr.open("GET", `http://games.espn.com/ffl/boxscorequick?leagueId=${leagueId}&seasonId=${pointerYear}&matchupPeriodId=${periodId}&teamId=${matchup.awayTeamId}&view=scoringperiod&version=quick`, false);
       xhr.send();
 
-      var elem = document.createElement('div');
-      elem.style.display = 'none';
       let tables = getPlayerTable(xhr.responseText);
       let players = tables[tables.length - 1].getElementsByClassName('pncPlayerRow')
       let players2 = tables[0].getElementsByClassName('pncPlayerRow')
-      console.log(periodId, seasonId, players, players2)
+      console.log("Still Loading", periodId, seasonId)
       for(var i = 0; i < players.length; i++) {
         if(players[i].getElementsByClassName('playertablePlayerName').length > 0) {
           let playerString = stripLinks(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
@@ -440,7 +438,8 @@ createTables = () => {
           return true;
         }
       } else if(currentYear === yearPointer && currentWeek === weekPointer) {
-        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer - 1) + "-" + weekPointer;
+        lastDate = (weekPointer === 1) ? "" + (yearPointer - 1) + "-" + leagueSettings.finalMatchupPeriodId : "" + (yearPointer) + "-" + weekPointer;
+        addMatchupBoxscoreToDB(week.matchups, 0, weekPointer, yearPointer, seasonId, ownerLookup, week.matchups.length > 1);
         return true;
       }
       initialRun = false;

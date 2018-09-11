@@ -292,8 +292,8 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
       let players2 = tables[0].getElementsByClassName('pncPlayerRow')
       for(var i = 0; i < players.length; i++) {
         if(players[i].getElementsByClassName('playertablePlayerName').length > 0) {
-          let playerString = stripLinks(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
-          let playerName = playerString.split(',')[0];
+          let playerString = stripLinks(stripImgs(players[i].getElementsByClassName('playertablePlayerName')[0].innerHTML)).replace('*','');;
+          let playerName = playerString.split(',')[0].split('&nbsp;')[0];
           let playerPos = playerString.split('&nbsp;')[1];
           let playerScore = players[i].getElementsByClassName('appliedPoints')[0].innerHTML;
           if(playerScore !== '--') {
@@ -307,8 +307,8 @@ const addMatchupBoxscoreToDB = (matchups, index, periodId, pointerYear, seasonId
       }
       for(var i = 0; i < players2.length; i++) {
         if(players2[i].getElementsByClassName('playertablePlayerName').length > 0) {
-          let playerString = stripLinks(players2[i].getElementsByClassName('playertablePlayerName')[0].innerHTML);
-          let playerName = playerString.split(',')[0];
+          let playerString = stripLinks(stripImgs(players2[i].getElementsByClassName('playertablePlayerName')[0].innerHTML)).replace('*','');
+          let playerName = playerString.split(',')[0].split('&nbsp;')[0];
           let playerPos = playerString.split('&nbsp;')[1];
           let playerScore = players2[i].getElementsByClassName('appliedPoints')[0].innerHTML;
           if(playerScore !== '--') {
@@ -777,6 +777,17 @@ const stripLinks = (s) => {
     let innerText = links[i].innerHTML;
     links[i].parentNode.prepend(innerText);
     links[i].parentNode.removeChild(links[i]);
+  }
+  return div.innerHTML;
+}
+
+const stripImgs = (s) => {
+  var div = document.createElement('div');
+  div.innerHTML = s;
+  var imgs = div.getElementsByTagName('img');
+  var i = imgs.length;
+  while (i--) {
+    imgs[i].parentNode.removeChild(imgs[i]);
   }
   return div.innerHTML;
 }

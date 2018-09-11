@@ -27,7 +27,7 @@ const generatePowerRanking = (rankingList, title, downloadImageFunction) => {
           rankingList.forEach((ranking) => {
             let manager = ranking.manager;
             let record = getTeamRecord(selectedYearLeagueSettings.teams, manager);
-            resultString = resultString + generateHTMLRowForPowerRanking(ranking, record, lastWeeksRanking, leagueDict);
+            resultString = resultString + generateHTMLRowForPowerRanking(ranking, record, lastWeeksRanking[manager], leagueDict);
           })
           resultString = resultString + "</table></div><style>";
           let circleWidth = 60;

@@ -202,25 +202,33 @@ const populatePowerRankings = () => {
       (tx, tr) => {
         var place = 1;
         if(tr.rows.length === 0) {
+          //show managers by points scored
+          let sortedArray = [];
           for(var teamKey in selectedYearLeagueSettings.teams) {
-            if (selectedYearLeagueSettings.teams.hasOwnProperty(teamKey)) {
-              let oName = selectedYearLeagueSettings.teams[teamKey].owners[0].firstName.trim() + ' ' + selectedYearLeagueSettings.teams[teamKey].owners[0].lastName.trim();
-              const row = document.createElement('tr');
-              const rankingCell = document.createElement('td');
-              const managerCell = document.createElement('td');
-              const descriptionCell = document.createElement('td');
-              const descriptionInput = document.createElement('input');
-              rankingCell.innerHTML = rankingToPlaceString(teamKey) + ": ";
-              managerCell.appendChild(generatePRManagerDropdown(place, oName));
-              place += 1;
-              descriptionInput.setAttribute('type','text');
-              descriptionInput.setAttribute('data-name',oName)
-              descriptionCell.appendChild(descriptionInput);
-              row.appendChild(rankingCell);
-              row.appendChild(managerCell);
-              row.appendChild(descriptionCell);
-              powerRankingTable.appendChild(row);
-            }
+            sortedArray.push(selectedYearLeagueSettings.teams[teamKey]);
+          }
+          sortedArray.sort((a,b) => {
+            if(a.record.pointsFor < b.record.pointsFor) return 1;
+            else if(a.record.pointsFor > b.record.pointsFor) return -1;
+            else return 0;
+          })
+          for(var i = 0; i < sortedArray.length; i++) {
+            let oName = sortedArray[i].owners[0].firstName.trim() + ' ' + sortedArray[i].owners[0].lastName.trim();
+            const row = document.createElement('tr');
+            const rankingCell = document.createElement('td');
+            const managerCell = document.createElement('td');
+            const descriptionCell = document.createElement('td');
+            const descriptionInput = document.createElement('input');
+            rankingCell.innerHTML = rankingToPlaceString(i+1) + ": ";
+            managerCell.appendChild(generatePRManagerDropdown(place, oName));
+            place += 1;
+            descriptionInput.setAttribute('type','text');
+            descriptionInput.setAttribute('data-name',oName)
+            descriptionCell.appendChild(descriptionInput);
+            row.appendChild(rankingCell);
+            row.appendChild(managerCell);
+            row.appendChild(descriptionCell);
+            powerRankingTable.appendChild(row);
           }
         } else {
           isOverridePowerRanking = true;

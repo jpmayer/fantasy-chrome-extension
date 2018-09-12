@@ -799,7 +799,7 @@ const getPlayerTable = (s) => {
   var i = tables.length;
   let tableList = [];
   while (i--) {
-    if(tables[i].classList.contains('playerTableTable')) {
+    if(tables[i].classList.contains('playerTableTable') && !tables[i].classList.contains('hideableGroup')) {
       tableList.push(tables[i]);
     }
   }

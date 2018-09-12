@@ -67,17 +67,28 @@ tr.rank td:nth-child(4) {
 tr.rank td:nth-child(5) {
   width: 55%;
   vertical-align: middle;
-  font-size: 10px;padding-left:5px;padding-right:5px;
+  font-size: 10px;
+  padding-left:5px;
+  padding-right:5px;
+}
+.teamPicture {
+  height: 100%;
+  display: table-cell;
+  padding: 5px 10px;
 }
 .teamPicture img{
   position: relative;
   max-width: 65px;
   height: 55px;
   vertical-align: middle;
-  object-fit: cover; border-radius: 10px;
+  object-fit: cover;
+  border-radius: 10px;
 }
 .manager-name {
- font-size: 13px;white-space: nowrap;top: -5px;position: relative;
+ font-size: 13px;
+ white-space: nowrap;
+ top: -5px;
+ position: relative;
 }
 .manager-name a {
   text-decoration: none !important;

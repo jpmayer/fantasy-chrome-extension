@@ -90,21 +90,32 @@ const getFewestPointsSeason = (db, leagueSettings, callback) => {
                 var key = rs.rows[i].manager + "-" + rs.rows[i].year;
                 if (scoreMap.has(key)) {
                   var old = scoreMap.get(key);
-                  scoreMap.set(key, parseFloat(old) + parseFloat(rs.rows[i].score));
+                  scoreMap.set(key, { score: parseFloat(old.score) + parseFloat(rs.rows[i].score), numGames: old.numGames + 1 });
                 } else {
-                  scoreMap.set(key, parseFloat(rs.rows[i].score));
+                  scoreMap.set(key, { score: parseFloat(rs.rows[i].score), numGames: 1 });
                 }
               }
             }
             var minEntry = { score: Infinity };
+            let hasCompletedSeason = false;
             for(let [k, v] of scoreMap){
-              if(minEntry.score > parseFloat(v)){
-                  minEntry.score = parseFloat(v);
-                  minEntry.manager = k.split("-")[0];
-                  minEntry.year = k.split("-")[1];
+              let tempYear = k.split("-")[1];
+              if (v.numGames === leagueSettings[tempYear].finalRegularSeasonMatchupPeriodId){
+                hasCompletedSeason = true;
+                if(minEntry.score > parseFloat(v.score)){
+                    minEntry.score = parseFloat(v.score);
+                    minEntry.manager = k.split("-")[0];
+                    minEntry.year = tempYear;
+                }
               }
             }
-            callback(minEntry);
+            if(hasCompletedSeason) callback(minEntry);
+            else callback({
+              score: 'N/A',
+              numGames: 'N/A',
+              manager: 'N/A',
+              year: 'N/A'
+            });
           }
         });
   });
@@ -186,8 +197,10 @@ const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
               }
             }
             var minEntry = { totalPoints: 9999 };
+            let hasCompletedSeason = false;
             for(let [k, v] of scoreMap){
               if (v.numGames == leagueSettings[v.year].finalRegularSeasonMatchupPeriodId){
+                hasCompletedSeason = true;
                 if(parseFloat(v.totalPoints) < parseFloat(minEntry.totalPoints)){
                   minEntry.totalPoints = parseFloat(v.totalPoints);
                   minEntry.numGames = leagueSettings[v.year].finalRegularSeasonMatchupPeriodId;
@@ -196,7 +209,13 @@ const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
                 }
               }
             }
-            callback(minEntry);
+            if(hasCompletedSeason) callback(minEntry);
+            else callback({
+              totalPoints: 'N/A',
+              numGames: 'N/A',
+              vs: 'N/A',
+              year: 'N/A'
+            });
           }
         });
   });
@@ -471,7 +490,8 @@ const getManagerName = (manager, managerMap) => {
 }
 
 const roundScore = (score) => {
-  if(score % 1 === 0) {
+  if(score === 'N/A') return score;
+  else if(score % 1 === 0) {
     return score;
   } else {
     return score.toFixed(2);

@@ -68,6 +68,7 @@ const generateHTMLRowForPowerRanking = (ranking, record, lastWeeksRanking, leagu
   let managerName = (leagueDict && leagueDict.managerMap && leagueDict.managerMap[ranking.manager]) ? leagueDict.managerMap[ranking.manager] : ranking.manager;
   let resultString = "";
   let teamName = "<div class='manager-name'>" + managerName + "</div>";
+  console.log(record);
   if(leagueDict && !leagueDict.hideTeamNames) {
     teamName = "<div class='team-name'>" + record.teamName + "</div><div class='manager-name-under-team'>" + managerName + "</div>";
   }

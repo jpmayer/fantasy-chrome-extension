@@ -8,7 +8,7 @@ chrome.runtime.onInstalled.addListener(function() {
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
     chrome.declarativeContent.onPageChanged.addRules([{
       conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {hostEquals: 'games.espn.com', pathEquals: '/ffl/leagueoffice'},
+        pageUrl: {hostEquals: 'fantasy.espn.com', pathEquals: '/football/league'},
       })
       ],
         actions: [new chrome.declarativeContent.ShowPageAction()]

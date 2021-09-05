@@ -7,15 +7,23 @@ const getLeagueSettings = (yearList, leagueId) => {
   const leagueSettingsMap = {};
   yearList.forEach((year) => {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", `http://games.espn.com/ffl/api/v2/leagueSettings?leagueId=${leagueId}&seasonId=${year}&matchupPeriodId=1`, false);
+    if(year === currentYear) {
+      xhr.open("GET", `https://fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${leagueId}?view=mLiveScoring&view=mMatchupScore&view=mRoster&view=mSettings&view=mStandings&view=mStatus&view=mTeam&view=modular&view=mNav`, false);
+    } else if(year < 2018) {
+      xhr.open("GET", `https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/${leagueId}?view=mLiveScoring&view=mMatchupScore&view=mRoster&view=mSettings&view=mStandings&view=mStatus&view=mTeam&view=modular&view=mNav&seasonId=${year}`, false);
+    } else {
+      xhr.open("GET", `https://fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${leagueId}?view=mSettings&view=mTeam&view=modular&view=mNav`, false);
+    }
+
+
     xhr.send();
-    leagueSettingsMap[year] = JSON.parse(xhr.responseText).leaguesettings;
+    leagueSettingsMap[year] = (year < 2018) ? JSON.parse(xhr.responseText)[0].settings : JSON.parse(xhr.responseText).settings;
   });
   return leagueSettingsMap;
 }
 
 const getPowerRankingWeekNameDisplay = (currentWeek, finalRegSeasonGame, champGame) => {
-  if(currentWeek === 1) {
+  if(currentWeek == 1) {
     return 'Preseason';
   } else if(currentWeek <= (finalRegSeasonGame + 1)) {
     return 'Week ' + (currentWeek - 1);
@@ -39,8 +47,9 @@ const getSacko = (db, year, leagueSettings, callback) => {
   let query = "SELECT manager, year, week, winLoss, score FROM matchups WHERE year = ? AND week <= ? ORDER BY manager ASC, year ASC, week ASC";
   var db = leagueDatabase.webdb.db;
   // get sacko overrides from local storage
-  chrome.storage.sync.get(['league-' + leagueSettings.id], (response) => {
-    const leagueDict = response['league-' + leagueSettings.id];
+  chrome.storage.sync.get(['league-' + leagueId], (response) => {
+    console.log(response)
+    const leagueDict = response['league-' + leagueId];
     const sackoMap = (leagueDict.sackoMap) ? leagueDict.sackoMap : {};
     if(sackoMap[year]) {
       callback({
@@ -51,7 +60,7 @@ const getSacko = (db, year, leagueSettings, callback) => {
       });
     } else {
       db.transaction((tx) => {
-        tx.executeSql(query, [year, leagueSettings.finalRegularSeasonMatchupPeriodId],
+        tx.executeSql(query, [year, leagueSettings.scheduleSettings.matchupPeriodCount],
           (tx, rs) => {
             const ownerMap = {};
             for(var i = 0; i < rs.rows.length; i++) {
@@ -88,7 +97,7 @@ const getSacko = (db, year, leagueSettings, callback) => {
             }
             for (var owner in ownerMap) {
               if (ownerMap.hasOwnProperty(owner)) {
-                if(ownerMap[owner].gamesPlayed === leagueSettings.finalRegularSeasonMatchupPeriodId) {
+                if(ownerMap[owner].gamesPlayed === leagueSettings.scheduleSettings.matchupPeriodCount) {
                   if(ownerMap[owner].count < sacko.count) {
                     sacko = ownerMap[owner];
                   } else if (ownerMap[owner].count === sacko.count) {
@@ -113,7 +122,10 @@ const getSacko = (db, year, leagueSettings, callback) => {
 const getChampion = (db, year, leagueSettings, callback) => {
   let query = 'SELECT manager, year, week, winLoss, score, isThirdPlaceGame, isChampionship FROM matchups WHERE year = ? AND week = ? AND winLoss = 1 AND isThirdPlaceGame = "false" AND isChampionship = "true" ORDER BY manager ASC, year ASC, week ASC';
   db.transaction((tx) => {
-    tx.executeSql(query, [year, leagueSettings.finalMatchupPeriodId],
+    console.log(leagueSettings);
+    let matchupPeriods = Object.keys(leagueSettings.scheduleSettings.matchupPeriods);
+    console.log(matchupPeriods, leagueSettings)
+    tx.executeSql(query, [year, matchupPeriods[matchupPeriods.length - 1]],
       (tx, rs) => {
         if(rs.rows.length === 0) {
           callback(null);
@@ -130,7 +142,7 @@ const getChampion = (db, year, leagueSettings, callback) => {
 const didAppearInPlayoffs = (db, manager, year, leagueSettings, callback) => {
   let query = 'SELECT DISTINCT manager, year, isLosersBacketGame FROM matchups WHERE manager = ? AND year = ? AND week > ? AND isLosersBacketGame = "false" ORDER BY year ASC, week ASC';
   db.transaction((tx) => {
-    tx.executeSql(query, [manager, year, leagueSettings.finalRegularSeasonMatchupPeriodId],
+    tx.executeSql(query, [manager, year, leagueSettings.scheduleSettings.matchupPeriodCount],
       (tx, rs) => {
         callback((rs.rows.length > 0));
       }, errorHandler)
@@ -332,8 +344,8 @@ const mergeDataIntoRecords = (records, sackos, champions, playoffApps, points) =
 
 const getAllTimeLeaderBoard = (recordArray, leagueSettings, callback) => {
   // get sacko overrides from local storage
-  chrome.storage.sync.get(['league-' + leagueSettings.id], (response) => {
-    const leagueDict = response['league-' + leagueSettings.id];
+  chrome.storage.sync.get(['league-' + leagueId], (response) => {
+    const leagueDict = response['league-' + leagueId];
     let thresholdReached = leagueDict.hideAverageLine;
     const lastPlaceName = (leagueDict.lastPlaceName) ? leagueDict.lastPlaceName : 'Sackos';
     let resultString = "<div id='winLeaders'>";

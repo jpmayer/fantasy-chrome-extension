@@ -1,5 +1,5 @@
 #powerRanking {
-  width:650px;
+  width:600px;
   position:relative;
   margin-left:auto;
   margin-right:auto;
@@ -70,6 +70,8 @@ tr.rank td:nth-child(5) {
   font-size: 10px;
   padding-left:5px;
   padding-right:5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 .teamPicture {
   height: 100%;

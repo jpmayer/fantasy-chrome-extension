@@ -9,6 +9,13 @@
         LM Note Generator For ESPN Fantasy Football
       </div>
       <div class="container">
+        <div class="container-row">
+          <label for="periodId">Current Week:</label>
+          <input type="number" id="periodId" name="periodId" min="1" max="18">
+        </div>
+      </div>
+      </div>
+      <div class="container">
         <div class="sub-header">
           Database Management - <span id="league-name"></span>
         </div>
@@ -50,7 +57,7 @@
     </div>
   </body>
 </html>
-<script src="vendor/html2canvas.min.js"></script>
+<script src="../vendor/html2canvas.min.js"></script>
 <script src="../js/util.js"></script>
 <script src="../js/recordBook.js"></script>
 <script src="../js/powerRankingUtil.js"></script>

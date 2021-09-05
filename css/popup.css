@@ -54,6 +54,11 @@ button#all-time-wins, button#record-book, button#power-rankings {
 span#database-last-update {
   margin-left: 5px;
 }
+#periodId {
+  float: right;
+  width: 75px;
+  text-align: center;
+}
 #power-rankings-table {
   width: 100%;
   text-align: center;

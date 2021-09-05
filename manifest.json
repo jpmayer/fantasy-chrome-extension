@@ -1,6 +1,6 @@
 {
   "name": "LM Note Generator For ESPN Fantasy Football",
-  "version": "1.1.9",
+  "version": "2.0.0",
   "description": "Build All Time Leader Board, Record Book, and Weekly Power Rankings for your ESPN Fantasy Football League!",
   "permissions": ["activeTab", "tabs", "declarativeContent", "storage", "http://games.espn.com/"],
   "background": {
@@ -9,7 +9,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*.espn.com/*"],
+      "matches": ["http://*.espn.com/*", "https://*.espn.com/*"],
       "js": ["vendor/html2canvas.min.js", "js/screenshot.js"]
     }
   ],

@@ -14,6 +14,7 @@ const getMostPointsGame = (db, callback) => {
 
 const getMostPointsSeason = (db, leagueSettings, callback) => {
   let query = "SELECT manager, score, year, week FROM matchups"
+  console.log(leagueSettings)
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -22,7 +23,7 @@ const getMostPointsSeason = (db, leagueSettings, callback) => {
           } else {
             var scoreMap = new Map();
             for(var i=0; i<rs.rows.length; i++) {
-              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
+              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].scheduleSettings.matchupPeriodCount+1){
                 //var key = { manager: rs.rows[i].manager, year: rs.rows[i].year };
                 var key = rs.rows[i].manager + "++-++" + rs.rows[i].year;
                 if (scoreMap.has(key)) {
@@ -85,7 +86,7 @@ const getFewestPointsSeason = (db, leagueSettings, callback) => {
           } else {
             var scoreMap = new Map();
             for(var i=0; i<rs.rows.length; i++) {
-              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
+              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].scheduleSettings.matchupPeriodCount+1){
                 //var key = { manager: rs.rows[i].manager, year: rs.rows[i].year };
                 var key = rs.rows[i].manager + "++-++" + rs.rows[i].year;
                 if (scoreMap.has(key)) {
@@ -100,7 +101,7 @@ const getFewestPointsSeason = (db, leagueSettings, callback) => {
             let hasCompletedSeason = false;
             for(let [k, v] of scoreMap){
               let tempYear = k.split("++-++")[1];
-              if (v.numGames === leagueSettings[tempYear].finalRegularSeasonMatchupPeriodId){
+              if (v.numGames === leagueSettings[tempYear].scheduleSettings.matchupPeriodCount){
                 hasCompletedSeason = true;
                 if(minEntry.score > parseFloat(v.score)){
                     minEntry.score = parseFloat(v.score);
@@ -145,7 +146,7 @@ const getMostPointsAllowedSeason = (db, leagueSettings, callback) => {
           } else {
             var scoreMap = new Map();
             for(var i=0; i<rs.rows.length; i++) {
-              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
+              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].scheduleSettings.matchupPeriodCount+1){
                 //var key = { manager: rs.rows[i].manager, year: rs.rows[i].year };
                 var key = rs.rows[i].vs + "-" + rs.rows[i].year;
                 if (scoreMap.has(key)) {
@@ -182,7 +183,7 @@ const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
           } else {
             var scoreMap = new Map();
             for(var i=0; i<rs.rows.length; i++) {
-              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
+              if(rs.rows[i].week < leagueSettings[rs.rows[i].year].scheduleSettings.matchupPeriodCount+1){
                 //var key = { manager: rs.rows[i].manager, year: rs.rows[i].year };
                 var key = rs.rows[i].vs + "-" + rs.rows[i].year;
                 if (scoreMap.has(key)) {
@@ -199,11 +200,11 @@ const getFewestPointsAllowedSeason = (db, leagueSettings, callback) => {
             var minEntry = { totalPoints: 9999 };
             let hasCompletedSeason = false;
             for(let [k, v] of scoreMap){
-              if (v.numGames == leagueSettings[v.year].finalRegularSeasonMatchupPeriodId){
+              if (v.numGames == leagueSettings[v.year].scheduleSettings.matchupPeriodCount){
                 hasCompletedSeason = true;
                 if(parseFloat(v.totalPoints) < parseFloat(minEntry.totalPoints)){
                   minEntry.totalPoints = parseFloat(v.totalPoints);
-                  minEntry.numGames = leagueSettings[v.year].finalRegularSeasonMatchupPeriodId;
+                  minEntry.numGames = leagueSettings[v.year].matchupPeriodCount;
                   minEntry.vs = v.vs;
                   minEntry.year = v.year;
                 }
@@ -361,14 +362,14 @@ const mapPositionAndTypeToKey = (position, type) => {
 }
 
 const getMostPointsPlayerGame = (db, playerPosition, leagueDict, callback) => {
-  let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC LIMIT 1";
+  let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+positionsByESPNValue[playerPosition]+"' AND score<>'undefined' ORDER BY score DESC LIMIT 1";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
           if(rs.rows.length === 0) {
             callback(null);
           } else {
-            let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'game')];
+            let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'game').replace('\/','')];
             if(localStorageRecord && parseFloat(localStorageRecord.score) > rs.rows[0].score) {
               callback({
                 score: localStorageRecord.score,
@@ -384,7 +385,7 @@ const getMostPointsPlayerGame = (db, playerPosition, leagueDict, callback) => {
 }
 
 const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, leagueDict, callback) => {
-  let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+playerPosition+"' AND score<>'undefined' ORDER BY score DESC";
+  let query = "SELECT player, playerPosition, score, year, week, manager FROM history WHERE playerPosition='"+positionsByESPNValue[playerPosition]+"' AND score<>'undefined' ORDER BY score DESC";
   db.transaction((tx) => {
       tx.executeSql(query, [],
         (tx, rs) => {
@@ -393,7 +394,7 @@ const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, leagueDic
           } else {
               var scoreMap = new Map();
               for(var i=0; i<rs.rows.length; i++) {
-                if(rs.rows[i].week < leagueSettings[rs.rows[i].year].finalRegularSeasonMatchupPeriodId+1){
+                if(rs.rows[i].week < leagueSettings[rs.rows[i].year].scheduleSettings.matchupPeriodCount+1){
                   //var key = { manager: rs.rows[i].manager, year: rs.rows[i].year };
                   var key = rs.rows[i].player + "++-++" + rs.rows[i].year;
                   if(scoreMap.has(key)) {
@@ -412,7 +413,7 @@ const getMostPointsPlayerSeason = (db, playerPosition, leagueSettings, leagueDic
                     maxEntry.year = k.split("++-++")[1];
                 }
               }
-              let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'season')];
+              let localStorageRecord = leagueDict[mapPositionAndTypeToKey(playerPosition, 'season').replace('\/','')];
               if(localStorageRecord && localStorageRecord.score > maxEntry.score) {
                 callback({
                   score: localStorageRecord.score,
@@ -486,11 +487,12 @@ const getManagerName = (manager, managerMap) => {
 }
 
 const roundScore = (score) => {
+  console.log(score)
   if(score === 'N/A') return score;
   else if(score % 1 === 0) {
     return score;
   } else {
-    return score.toFixed(2);
+    return parseFloat(score).toFixed(2);
   }
 }
 
@@ -519,7 +521,9 @@ const generateRecordBookHTML = (records, leagueDict) => {
   resultString = resultString + "<tr> <td class='recordType even'>Fewest Points Allowed (S) </td><td class='center even'>" + roundScore(records["fewestPointsAllowedSeason"].totalPoints) + "</td><td class='center even'>" + getManagerName(records["fewestPointsAllowedSeason"].vs, leagueDict.managerMap) + " - " + records["fewestPointsAllowedSeason"].year + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType odd'>Longest Win Streak </td><td class='center odd'>" + records["winStreak"].games.length + "</td><td class='center odd'>" + getManagerName(records["winStreak"].manager, leagueDict.managerMap) + "</td></tr>"
   resultString = resultString + "<tr> <td class='recordType even'>Longest Losing Streak </td><td class='center even'>" + records["loseStreak"].games.length + "</td><td class='center even'>" + getManagerName(records["loseStreak"].manager, leagueDict.managerMap) + "</td></tr>";
+console.log(leagueDict, !leagueDict.hidePlayerRecords);
   if(leagueDict && !leagueDict.hidePlayerRecords) {
+    console.log("here", records);
     if(records["mostPointsPlayerGame-QB"]) resultString = resultString + "<tr> <td class='recordType odd'>Most Points-QB (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-QB"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-QB"].player + "</td></tr>"
     if(records["mostPointsPlayerSeason-QB"]) resultString = resultString + "<tr> <td class='recordType even'>Most Points-QB (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-QB"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-QB"].player + " - " + records["mostPointsPlayerSeason-QB"].year + "</td></tr>"
     if(records["mostPointsPlayerGame-RB"]) resultString = resultString + "<tr> <td class='recordType odd'>Most Points-RB (G) </td><td class='center odd'>" + roundScore(records["mostPointsPlayerGame-RB"].score) + "</td><td class='center odd'>" + records["mostPointsPlayerGame-RB"].player + "</td></tr>"
@@ -534,6 +538,6 @@ const generateRecordBookHTML = (records, leagueDict) => {
     if(records["mostPointsPlayerSeason-K"]) resultString = resultString + "<tr> <td class='recordType even'>Most Points-K (S) </td><td class='center even'>" + roundScore(records["mostPointsPlayerSeason-K"].score) + "</td><td class='center even'>" + records["mostPointsPlayerSeason-K"].player + " - " + records["mostPointsPlayerSeason-K"].year + "</td></tr>"
   }
   resultString = resultString + "</table></div>"
-
+  console.log(resultString)
   return resultString;
 }
